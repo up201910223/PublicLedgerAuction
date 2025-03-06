@@ -8,12 +8,14 @@ import java.util.List;
  */
 public class Blockchain {
     private List<Block> chain;
+    private int difficulty; // Nível de dificuldade da mineração
 
     /**
-     * Construtor da Blockchain. Inicia com o bloco génesis.
+     * Construtor da Blockchain. Inicia com o bloco génesis e define a dificuldade.
      */
-    public Blockchain() {
-        chain = new ArrayList<>();
+    public Blockchain(int difficulty) {
+        this.chain = new ArrayList<>();
+        this.difficulty = difficulty;
         chain.add(createGenesisBlock());
     }
 
@@ -22,7 +24,9 @@ public class Blockchain {
      * @return O bloco génesis.
      */
     private Block createGenesisBlock() {
-        return new Block(0, "Genesis Block", "0");
+        Block genesis = new Block(0, "Genesis Block", "0");
+        genesis.mineBlock(difficulty); // Minera o bloco génesis
+        return genesis;
     }
 
     /**
@@ -34,12 +38,13 @@ public class Blockchain {
     }
 
     /**
-     * Adiciona um novo bloco à blockchain.
+     * Adiciona um novo bloco à blockchain e realiza a mineração.
      * @param data Dados a armazenar no novo bloco.
      */
     public void addBlock(String data) {
         Block previousBlock = getLatestBlock();
         Block newBlock = new Block(previousBlock.getIndex() + 1, data, previousBlock.getHash());
+        newBlock.mineBlock(difficulty); // Mineração do bloco antes de adicioná-lo
         chain.add(newBlock);
     }
 
@@ -52,6 +57,7 @@ public class Blockchain {
             System.out.println("Timestamp: " + block.getData());
             System.out.println("Previous Hash: " + block.getPreviousHash());
             System.out.println("Hash: " + block.getHash());
+            System.out.println("Nonce: " + block.getNonce());
             System.out.println("----------------------");
         }
     }
