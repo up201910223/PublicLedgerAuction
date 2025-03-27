@@ -30,7 +30,10 @@ public class Block {
         this.nonce = 0; // Inicializa o nonce
         this.hash = calculateHash(); // Gera o hash do bloco com base nos seus dados
     }
-
+    /**
+     * Incrementa o valor do nonce do bloco em 1.
+     */
+    public void incrementNonce() {this.nonce++; }
     /**
      * Calcula o hash do bloco utilizando SHA-256.
      * O hash inclui o índice, timestamp, dados, hash anterior e o nonce.
