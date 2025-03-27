@@ -13,7 +13,7 @@
 - - New finalized auctions are now stored in the respective block (each node has its own block (?confirm with teacher))
 - - This new information must then be present in all the Miner nodes (how do we do that?)
 
-- There are probably steps missing or slick errors on this but at least we have a general idea that we can polish. 
+- There are probably steps missing or slight errors on this but at least we have a general idea that we can polish. 
 
 
 ### IMPORTANT
