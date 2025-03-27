@@ -7,7 +7,8 @@ class Node {
     private final int id;
     private final int port;
     private DatagramSocket socket;
-    private final Map<Integer, InetSocketAddress> routingTable = new HashMap<>();
+    private final TreeMap<Integer, InetSocketAddress> routingTable = new TreeMap<>();
+    private final Map<String,String> dataStore = new HashMap<>();
 
 
     public Node(int id, int port) throws SocketException{
@@ -37,9 +38,58 @@ class Node {
 
     private void processMessage(String message, InetAddress senderAddress, int senderPort){
         System.out.println("Message: " + message + " from " + senderAddress + ":" + senderPort);
-        if (message.startsWith("PING")){
-            sendMessage("PING RECEIVED", senderAddress, senderPort);
+        String[] parts = message.split(" ",2);
+        String command = parts[0];
+        String content = parts.length > 1 ? parts[1] : "";
+
+        switch(command) {
+            case "PING":
+                sendMessage("PING", senderAddress, senderPort);
+                break;
+            case "STORE":
+                String[] keyValue = content.split(" ",2);
+                if (keyValue.length == 2){
+                    dataStore.put(keyValue[0],keyValue[1]);
+                    sendMessage("STORED " + keyValue[0], senderAddress, senderPort);
+                }
+                break;
+            case "FIND_NODE":
+                int targetId = Integer.parseInt(content);
+                InetSocketAddress closestNode = findClosestNode(targetId);
+                if(closestNode != null){
+                    sendMessage("NODE " + closestNode.getAddress().getHostAddress() + ":" + closestNode.getPort(),senderAddress,senderPort);
+                }
+                else{
+                    sendMessage("NODE_NOT_FOUND", senderAddress, senderPort);
+                }
+                break;
+            case "FIND_VALUE":
+                if(dataStore.containsKey(content)){
+                    sendMessage("VALUE " + content + " " + dataStore.get(content), senderAddress, senderPort);
+                }
+                else{
+                    sendMessage("VALUE_NOT_FOUND " + content, senderAddress, senderPort);
+                }
+                break;
+            case "JOIN":
+                String[] joinParts = content.split(" ",2);
+                int newNodeId = Integer.parseInt(joinParts[0]);
+                routingTable.put(xorDistance(id,newNodeId), new InetSocketAddress(senderAddress,senderPort));
+                sendMessage("JOINED AS " + newNodeId, senderAddress, senderPort);
+                break;
+            case "LEAVE":
+                int leavingNodeId = Integer.parseInt(content);
+                routingTable.remove(xorDistance(id,leavingNodeId));
+                break;
         }
+    }
+
+    private InetSocketAddress findClosestNode(int targetId){
+        return routingTable.isEmpty() ? null: routingTable.firstEntry().getValue();
+    }
+
+    private int xorDistance(int node1,int node2){
+        return node1 ^ node2;
     }
 
     private void sendMessage(String message, InetAddress address, int port){
@@ -51,9 +101,5 @@ class Node {
         catch (IOException e){
             e.printStackTrace();
         }
-    }
-
-    public void addNode(int nodeId, InetSocketAddress address){
-        routingTable.put(nodeId, address);
     }
 }
