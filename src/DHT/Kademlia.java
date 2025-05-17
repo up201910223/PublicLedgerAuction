@@ -7,8 +7,8 @@ class Node {
     private final int id;
     private final int port;
     private DatagramSocket socket;
-    private final TreeMap<Integer, InetSocketAddress> routingTable = new TreeMap<>();
-    private final Map<String,String> dataStore = new HashMap<>();
+    private final Map<String,String> dataStore = Collections.synchronizedMap(new HashMap<>());
+    private final Map<Integer, InetSocketAddress> routingTable = Collections.synchronizedMap(new TreeMap<>());
 
 
     public Node(int id, int port) throws SocketException{
