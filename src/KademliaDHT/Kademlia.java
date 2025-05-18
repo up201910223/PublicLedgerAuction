@@ -1,0 +1,294 @@
+package KademliaDHT;
+
+import Auctions.Auction;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioDatagramChannel;
+import io.netty.util.internal.shaded.org.jctools.queues.MessagePassingQueue;
+
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
+
+import static BlockChain.Constants.GENESIS_PREV_HASH;
+import static KademliaDHT.Utils.findClosestNodes;
+
+public class Kademlia {
+
+    private static final Logger LOGGER = Logger.getLogger(Kademlia.class.getName());
+    private static final int BUCKET_SIZE = 2;
+    private static Kademlia singletonInstance;
+
+    private StringBuilder currentBlockHash;
+    private StringBuilder currentAuctionId;
+
+    public enum MsgType {
+        PING, FIND_NODE, FIND_VALUE, STORE, NOTIFY, LATEST_BLOCK, NEW_AUCTION, AUCTION_UPDATE
+    }
+
+    private Kademlia() {
+        this.currentBlockHash = new StringBuilder(GENESIS_PREV_HASH);
+        this.currentAuctionId = null;
+    }
+
+    public static Kademlia getInstance() {
+        if (singletonInstance == null) {
+            singletonInstance = new Kademlia();
+        }
+        return singletonInstance;
+    }
+
+    public void joinNetwork(Node selfNode, String bootstrapNodeId) {
+        LOGGER.info("Attempting to connect to bootstrap node");
+        List<NodeInfo> initialNearNodes = findNode(selfNode.getNodeInfo(), bootstrapNodeId, selfNode.getRoutingTable());
+
+        connectAndCommunicate(selfNode.getNodeInfo(), selfNode.findNodeInfoById(bootstrapNodeId), null, null, MsgType.LATEST_BLOCK);
+
+        selfNode.getRoutingTable().remove(selfNode.findNodeInfoById(bootstrapNodeId));
+
+        for (NodeInfo nearNode : initialNearNodes) {
+            selfNode.updateRoutingTable(nearNode);
+            List<NodeInfo> extendedNearNodes = findNode(selfNode.getNodeInfo(), nearNode.getNodeId(), selfNode.getRoutingTable());
+            while (!extendedNearNodes.isEmpty()) {
+                List<NodeInfo> tempNearNodes = new ArrayList<>();
+                for (NodeInfo extNearNode : extendedNearNodes) {
+                    if (!selfNode.getRoutingTable().contains(extNearNode)) {
+                        selfNode.updateRoutingTable(extNearNode);
+                        tempNearNodes.addAll(findNode(selfNode.getNodeInfo(), extNearNode.getNodeId(), selfNode.getRoutingTable()));
+                    }
+                }
+                extendedNearNodes = tempNearNodes;
+            }
+        }
+    }
+
+    public List<NodeInfo> findNode(NodeInfo selfInfo, String targetId, Set<NodeInfo> routingSet) {
+        LOGGER.info("Executing FIND_NODE RPC");
+
+        for (NodeInfo node : routingSet) {
+            if (node.getNodeId().equals(targetId)) {
+                LOGGER.info("Target node found: " + node);
+                return (List<NodeInfo>) connectAndCommunicate(selfInfo, node, null, null, MsgType.FIND_NODE);
+            }
+        }
+
+        List<NodeInfo> closestNodes = findClosestNodes(routingSet, targetId, BUCKET_SIZE);
+        List<NodeInfo> collectedNodes = new ArrayList<>();
+        for (NodeInfo closest : closestNodes) {
+            collectedNodes.addAll((List<NodeInfo>) connectAndCommunicate(selfInfo, closest, null, null, MsgType.FIND_NODE));
+        }
+
+        for (NodeInfo node : collectedNodes) {
+            if (node.getNodeId().equals(targetId)) {
+                LOGGER.info("Target node found in collected nodes: " + node);
+                return (List<NodeInfo>) connectAndCommunicate(selfInfo, node, null, null, MsgType.FIND_NODE);
+            }
+        }
+
+        LOGGER.info("Node not located");
+        return collectedNodes;
+    }
+
+    public void ping(NodeInfo selfInfo, String targetId, Set<NodeInfo> routingSet) {
+        LOGGER.info("Executing PING RPC");
+        for (NodeInfo node : routingSet) {
+            if (node.getNodeId().equals(targetId)) {
+                LOGGER.info("Node located: " + node);
+                connectAndCommunicate(selfInfo, node, null, null, MsgType.PING);
+                return;
+            }
+        }
+        LOGGER.info("Ping failed - node not found");
+    }
+
+    public Object findValue(Node localNode, String key) {
+        LOGGER.info("Executing FIND_VALUE RPC");
+        Object valueFound = localNode.findValueByKey(key);
+        if (valueFound != null) {
+            LOGGER.info("Value found locally: " + valueFound);
+            return valueFound;
+        }
+
+        findNode(localNode.getNodeInfo(), key, localNode.getRoutingTable());
+
+        List<NodeInfo> nearbyNodes = findClosestNodes(localNode.getRoutingTable(), key, BUCKET_SIZE);
+        for (NodeInfo nearNode : nearbyNodes) {
+            Object value = connectAndCommunicate(localNode.getNodeInfo(), nearNode, key, new ValueWrapper(null), MsgType.FIND_VALUE);
+            LOGGER.info("Value retrieved from network: " + value);
+            // TODO: localNode.storeKeyValue(key, value);
+            return value;
+        }
+
+        return nearbyNodes;
+    }
+
+    public void store(Node localNode, String key, ValueWrapper value) {
+        LOGGER.info("Executing STORE RPC");
+
+        findNode(localNode.getNodeInfo(), key, localNode.getRoutingTable());
+        List<NodeInfo> closestNodes = findClosestNodes(localNode.getRoutingTable(), key, BUCKET_SIZE);
+
+        NodeInfo nodeToStore = locateNodeForKey(localNode.getNodeInfo(), key, closestNodes);
+        if (nodeToStore != null) {
+            if (nodeToStore.equals(localNode.getNodeInfo())) {
+                localNode.storeKeyValue(key, value.getValue());
+                if (value.getValue() instanceof Auction) {
+                    ((Auction) value.getValue()).setStoredNodeId(localNode.getNodeInfo().getNodeId());
+                }
+                LOGGER.info("Stored key: " + key + " with value: " + value.getValue());
+            } else {
+                connectAndCommunicate(localNode.getNodeInfo(), nodeToStore, key, value, MsgType.STORE);
+            }
+        } else {
+            LOGGER.severe("Failed to locate node for storing key-value");
+        }
+    }
+
+    private NodeInfo locateNodeForKey(NodeInfo selfInfo, String key, List<NodeInfo> candidates) {
+        NodeInfo bestNode = selfInfo;
+        int minDistance = Utils.calculateDistance(selfInfo.getNodeId(), key);
+
+        for (NodeInfo candidate : candidates) {
+            int dist = Utils.calculateDistance(candidate.getNodeId(), key);
+            if (dist < minDistance) {
+                minDistance = dist;
+                bestNode = candidate;
+            }
+        }
+        return bestNode;
+    }
+
+    public void notifyBlockUpdate(NodeInfo selfInfo, Set<NodeInfo> routingSet, String newHash) {
+        LOGGER.info("Starting block hash notification");
+        if (!newHash.contentEquals(this.currentBlockHash)) {
+            currentBlockHash = new StringBuilder(newHash);
+            LOGGER.info("Block hash updated");
+            for (NodeInfo node : routingSet) {
+                connectAndCommunicate(selfInfo, node, newHash, null, MsgType.NOTIFY);
+            }
+        } else {
+            LOGGER.info("Block hash unchanged");
+        }
+    }
+
+    public void broadcastAuction(NodeInfo selfInfo, Set<NodeInfo> routingSet, String auctionId) {
+        LOGGER.info("Broadcasting new auction");
+        if (this.currentAuctionId == null || !auctionId.contentEquals(this.currentAuctionId)) {
+            this.currentAuctionId = new StringBuilder(auctionId);
+            for (NodeInfo node : routingSet) {
+                connectAndCommunicate(selfInfo, node, auctionId, null, MsgType.NEW_AUCTION);
+            }
+        } else {
+            LOGGER.info("Auction already broadcasted");
+        }
+    }
+
+    public boolean routingTableContains(Set<NodeInfo> routingSet, String nodeId) {
+        for (NodeInfo node : routingSet) {
+            if (node.getNodeId().equals(nodeId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void notifyAuctionUpdate(NodeInfo selfInfo, Set<NodeInfo> routingSet, Auction auction) {
+        LOGGER.info("Processing auction update notification");
+
+        for (String subscriberId : auction.getSubscribers()) {
+            if (!routingTableContains(routingSet, subscriberId) &&
+                !subscriberId.equals(selfInfo.getNodeId()) &&
+                !subscriberId.equals(auction.getStoredNodeId())) {
+                findNode(selfInfo, subscriberId, routingSet);
+            }
+        }
+
+        String auctionId = auction.getId();
+        Double currentBid = auction.getCurrentBid();
+        // TODO: update current bidder info
+
+        for (NodeInfo node : routingSet) {
+            if (node.getNodeId().equals(auction.getStoredNodeId())) {
+                if (auction.isOpen()) {
+                    connectAndCommunicate(selfInfo, node, auctionId, new ValueWrapper(currentBid), MsgType.AUCTION_UPDATE);
+                }
+            }
+            if (auction.isSubscriber(node.getNodeId())) {
+                if (auction.isOpen() && !node.getNodeId().equals(auction.getStoredNodeId())) {
+                    connectAndCommunicate(selfInfo, node, auctionId, new ValueWrapper(currentBid), MsgType.AUCTION_UPDATE);
+                } else if (!auction.isOpen()) {
+                    connectAndCommunicate(selfInfo, node, auctionId, new ValueWrapper("Auction " + auctionId + " closed."), MsgType.AUCTION_UPDATE);
+                }
+            }
+        }
+    }
+
+    public void notifyNewSubscriber(NodeInfo selfInfo, Set<NodeInfo> routingSet, Auction auction) {
+        LOGGER.info("Notifying about new subscriber");
+        for (String subscriberId : auction.getSubscribers()) {
+            if (!routingTableContains(routingSet, subscriberId) &&
+                !subscriberId.equals(selfInfo.getNodeId()) &&
+                !subscriberId.equals(auction.getStoredNodeId())) {
+                findNode(selfInfo, subscriberId, routingSet);
+            }
+        }
+
+        for (NodeInfo node : routingSet) {
+            if (node.getNodeId().equals(auction.getStoredNodeId())) {
+                connectAndCommunicate(selfInfo, node, auction.getId(), new ValueWrapper(selfInfo.getNodeId()), MsgType.AUCTION_UPDATE);
+            }
+        }
+    }
+
+    private Object connectAndCommunicate(NodeInfo selfInfo, NodeInfo targetInfo, String key, ValueWrapper value, MsgType type) {
+        List<NodeInfo> nearNodes = new ArrayList<>();
+        EventLoopGroup eventGroup = new NioEventLoopGroup();
+        try {
+            establishConnection(selfInfo, targetInfo, eventGroup, channel -> {
+                ClientHandler handler = new ClientHandler(selfInfo, targetInfo, key, value, type, nearNodes);
+                channel.pipeline().addLast(handler);
+            });
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            LOGGER.severe("Connection interrupted: " + e.getMessage());
+        } catch (Exception e) {
+            LOGGER.severe("Connection error: " + e.getMessage());
+        } finally {
+            eventGroup.shutdownGracefully().addListener(future -> {
+                if (!future.isSuccess()) {
+                    LOGGER.severe("Event loop shutdown error: " + future.cause().getMessage());
+                }
+            });
+        }
+        if (type == MsgType.FIND_NODE) return nearNodes;
+        else if (type == MsgType.FIND_VALUE) return value.getValue();
+        return null;
+    }
+
+    private void establishConnection(NodeInfo selfInfo, NodeInfo targetInfo, EventLoopGroup group, MessagePassingQueue.Consumer<Channel> channelSetup) throws InterruptedException {
+        Bootstrap bootstrap = new Bootstrap();
+        bootstrap.group(group)
+                .channel(NioDatagramChannel.class)
+                .option(ChannelOption.AUTO_CLOSE, true)
+                .handler(new ChannelInitializer<NioDatagramChannel>() {
+                    @Override
+                    protected void initChannel(NioDatagramChannel ch) {
+                        channelSetup.accept(ch);
+                    }
+                });
+
+        bootstrap.localAddress(selfInfo.getPort() + 1);
+        ChannelFuture future = bootstrap.connect(targetInfo.getIpAddr(), targetInfo.getPort()).sync();
+        LOGGER.info("Connected to node " + targetInfo.getIpAddr() + ":" + targetInfo.getPort());
+        future.channel().closeFuture().await(3, TimeUnit.SECONDS);
+    }
+
+    public StringBuilder getCurrentBlockHash() {
+        return currentBlockHash;
+    }
+
+    public void setCurrentBlockHash(String newHash) {
+        this.currentBlockHash = new StringBuilder(newHash);
+    }
+}
