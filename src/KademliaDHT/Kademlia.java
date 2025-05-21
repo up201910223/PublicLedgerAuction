@@ -17,12 +17,14 @@ import static KademliaDHT.Utils.findClosestNodes;
 public class Kademlia {
 
     private static final Logger LOGGER = Logger.getLogger(Kademlia.class.getName());
-    private static final int BUCKET_SIZE = 2;
-    private static Kademlia singletonInstance;
 
-    private StringBuilder currentBlockHash;
-    private StringBuilder currentAuctionId;
+    private static final int BUCKET_SIZE = 2; // Max number of nodes in a k-bucket
+    private static Kademlia singletonInstance; // Singleton instance of this class
 
+    private StringBuilder currentBlockHash; // Latest known block hash
+    private StringBuilder currentAuctionId; // ID of the currently broadcasted auction
+
+    // Message types handled in this implementation
     public enum MsgType {
         PING, FIND_NODE, FIND_VALUE, STORE, NOTIFY, LATEST_BLOCK, NEW_AUCTION, AUCTION_UPDATE
     }
@@ -32,6 +34,7 @@ public class Kademlia {
         this.currentAuctionId = null;
     }
 
+    // Returns the singleton instance of Kademlia
     public static Kademlia getInstance() {
         if (singletonInstance == null) {
             singletonInstance = new Kademlia();
@@ -39,17 +42,27 @@ public class Kademlia {
         return singletonInstance;
     }
 
+    /**
+     * Bootstraps a node into the DHT network using a known node ID.
+     */
     public void joinNetwork(Node selfNode, String bootstrapNodeId) {
-        LOGGER.info("Attempting to connect to bootstrap node");
+        LOGGER.info("Connecting to bootstrap node...");
+
+        // Perform an initial lookup for the bootstrap node
         List<NodeInfo> initialNearNodes = findNode(selfNode.getNodeInfo(), bootstrapNodeId, selfNode.getRoutingTable());
 
+        // Ask the bootstrap node for the latest block
         connectAndCommunicate(selfNode.getNodeInfo(), selfNode.findNodeInfoById(bootstrapNodeId), null, null, MsgType.LATEST_BLOCK);
 
+        // Remove bootstrap node from table temporarily to avoid duplication
         selfNode.getRoutingTable().remove(selfNode.findNodeInfoById(bootstrapNodeId));
 
+        // Expand knowledge by querying nodes found
         for (NodeInfo nearNode : initialNearNodes) {
             selfNode.updateRoutingTable(nearNode);
             List<NodeInfo> extendedNearNodes = findNode(selfNode.getNodeInfo(), nearNode.getNodeId(), selfNode.getRoutingTable());
+
+            // Iteratively expand the node's neighborhood
             while (!extendedNearNodes.isEmpty()) {
                 List<NodeInfo> tempNearNodes = new ArrayList<>();
                 for (NodeInfo extNearNode : extendedNearNodes) {
@@ -63,9 +76,13 @@ public class Kademlia {
         }
     }
 
+    /**
+     * Attempts to find a node by ID within the routing set or via network communication.
+     */
     public List<NodeInfo> findNode(NodeInfo selfInfo, String targetId, Set<NodeInfo> routingSet) {
-        LOGGER.info("Executing FIND_NODE RPC");
+        LOGGER.info("FIND_NODE in progress...");
 
+        // Direct match in routing table
         for (NodeInfo node : routingSet) {
             if (node.getNodeId().equals(targetId)) {
                 LOGGER.info("Target node found: " + node);
@@ -73,12 +90,15 @@ public class Kademlia {
             }
         }
 
+        // Search closest known nodes
         List<NodeInfo> closestNodes = findClosestNodes(routingSet, targetId, BUCKET_SIZE);
         List<NodeInfo> collectedNodes = new ArrayList<>();
+
         for (NodeInfo closest : closestNodes) {
             collectedNodes.addAll((List<NodeInfo>) connectAndCommunicate(selfInfo, closest, null, null, MsgType.FIND_NODE));
         }
 
+        // Check if any of the new nodes match
         for (NodeInfo node : collectedNodes) {
             if (node.getNodeId().equals(targetId)) {
                 LOGGER.info("Target node found in collected nodes: " + node);
@@ -90,8 +110,11 @@ public class Kademlia {
         return collectedNodes;
     }
 
+    /**
+     * Sends a ping message to a target node.
+     */
     public void ping(NodeInfo selfInfo, String targetId, Set<NodeInfo> routingSet) {
-        LOGGER.info("Executing PING RPC");
+        LOGGER.info("PING in progress...");
         for (NodeInfo node : routingSet) {
             if (node.getNodeId().equals(targetId)) {
                 LOGGER.info("Node located: " + node);
@@ -102,29 +125,36 @@ public class Kademlia {
         LOGGER.info("Ping failed - node not found");
     }
 
+    /**
+     * Attempts to find a value by key, starting with the local store.
+     */
     public Object findValue(Node localNode, String key) {
-        LOGGER.info("Executing FIND_VALUE RPC");
+        LOGGER.info("FIND_VALUE in progress...");
         Object valueFound = localNode.findValueByKey(key);
         if (valueFound != null) {
             LOGGER.info("Value found locally: " + valueFound);
             return valueFound;
         }
 
+        // Otherwise, search network
         findNode(localNode.getNodeInfo(), key, localNode.getRoutingTable());
 
         List<NodeInfo> nearbyNodes = findClosestNodes(localNode.getRoutingTable(), key, BUCKET_SIZE);
         for (NodeInfo nearNode : nearbyNodes) {
             Object value = connectAndCommunicate(localNode.getNodeInfo(), nearNode, key, new ValueWrapper(null), MsgType.FIND_VALUE);
             LOGGER.info("Value retrieved from network: " + value);
-            // TODO: localNode.storeKeyValue(key, value);
+            // TODO: localNode.storeKeyValue(key, value); // For caching
             return value;
         }
 
         return nearbyNodes;
     }
 
+    /**
+     * Stores a key-value pair either locally or on the closest node.
+     */
     public void store(Node localNode, String key, ValueWrapper value) {
-        LOGGER.info("Executing STORE RPC");
+        LOGGER.info("STORE in progress...");
 
         findNode(localNode.getNodeInfo(), key, localNode.getRoutingTable());
         List<NodeInfo> closestNodes = findClosestNodes(localNode.getRoutingTable(), key, BUCKET_SIZE);
@@ -145,6 +175,9 @@ public class Kademlia {
         }
     }
 
+    /**
+     * Determines the best node to store a key based on XOR distance.
+     */
     private NodeInfo locateNodeForKey(NodeInfo selfInfo, String key, List<NodeInfo> candidates) {
         NodeInfo bestNode = selfInfo;
         int minDistance = Utils.calculateDistance(selfInfo.getNodeId(), key);
@@ -159,6 +192,9 @@ public class Kademlia {
         return bestNode;
     }
 
+    /**
+     * Broadcasts an updated block hash to the network.
+     */
     public void notifyBlockUpdate(NodeInfo selfInfo, Set<NodeInfo> routingSet, String newHash) {
         LOGGER.info("Starting block hash notification");
         if (!newHash.contentEquals(this.currentBlockHash)) {
@@ -172,6 +208,9 @@ public class Kademlia {
         }
     }
 
+    /**
+     * Announces a new auction ID to all peers.
+     */
     public void broadcastAuction(NodeInfo selfInfo, Set<NodeInfo> routingSet, String auctionId) {
         LOGGER.info("Broadcasting new auction");
         if (this.currentAuctionId == null || !auctionId.contentEquals(this.currentAuctionId)) {
@@ -184,6 +223,9 @@ public class Kademlia {
         }
     }
 
+    /**
+     * Checks whether a routing table contains a specific node.
+     */
     public boolean routingTableContains(Set<NodeInfo> routingSet, String nodeId) {
         for (NodeInfo node : routingSet) {
             if (node.getNodeId().equals(nodeId)) {
@@ -193,9 +235,13 @@ public class Kademlia {
         return false;
     }
 
+    /**
+     * Notifies auction participants of bid updates.
+     */
     public void notifyAuctionUpdate(NodeInfo selfInfo, Set<NodeInfo> routingSet, Auction auction) {
         LOGGER.info("Processing auction update notification");
 
+        // Ensure all subscribers are reachable
         for (String subscriberId : auction.getSubscribers()) {
             if (!routingTableContains(routingSet, subscriberId) &&
                 !subscriberId.equals(selfInfo.getNodeId()) &&
@@ -206,8 +252,8 @@ public class Kademlia {
 
         String auctionId = auction.getId();
         Double currentBid = auction.getCurrentBid();
-        // TODO: update current bidder info
 
+        // Notify appropriate participants
         for (NodeInfo node : routingSet) {
             if (node.getNodeId().equals(auction.getStoredNodeId())) {
                 if (auction.isOpen()) {
@@ -224,8 +270,12 @@ public class Kademlia {
         }
     }
 
+    /**
+     * Notifies the auction creator when a new participant subscribes.
+     */
     public void notifyNewSubscriber(NodeInfo selfInfo, Set<NodeInfo> routingSet, Auction auction) {
         LOGGER.info("Notifying about new subscriber");
+
         for (String subscriberId : auction.getSubscribers()) {
             if (!routingTableContains(routingSet, subscriberId) &&
                 !subscriberId.equals(selfInfo.getNodeId()) &&
@@ -241,6 +291,9 @@ public class Kademlia {
         }
     }
 
+    /**
+     * Core communication method to send messages between nodes.
+     */
     private Object connectAndCommunicate(NodeInfo selfInfo, NodeInfo targetInfo, String key, ValueWrapper value, MsgType type) {
         List<NodeInfo> nearNodes = new ArrayList<>();
         EventLoopGroup eventGroup = new NioEventLoopGroup();
@@ -261,11 +314,15 @@ public class Kademlia {
                 }
             });
         }
+
         if (type == MsgType.FIND_NODE) return nearNodes;
         else if (type == MsgType.FIND_VALUE) return value.getValue();
         return null;
     }
 
+    /**
+     * Establishes a Netty connection and sets up channel pipeline with custom handler.
+     */
     private void establishConnection(NodeInfo selfInfo, NodeInfo targetInfo, EventLoopGroup group, MessagePassingQueue.Consumer<Channel> channelSetup) throws InterruptedException {
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(group)
@@ -284,6 +341,7 @@ public class Kademlia {
         future.channel().closeFuture().await(3, TimeUnit.SECONDS);
     }
 
+    // Getter/setter for current block hash
     public StringBuilder getCurrentBlockHash() {
         return currentBlockHash;
     }
