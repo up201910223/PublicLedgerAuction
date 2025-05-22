@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static KademliaDHT.KademliaDHT.Kademlia.MsgType;
+import KademliaDHT.Kademlia.MsgType;
 
 /**
  * UDP Server handler for incoming Kademlia messages
@@ -45,7 +45,7 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
         ByteBuf buffer = packet.content();
 
         // Read message type enum ordinal
-        MessageType messageType = MessageType.values()[buffer.readInt()];
+        Kademlia.MsgType messageType = Kademlia.MsgType.values()[buffer.readInt()];
         logger.info("Received " + messageType + " packet from: " + packet.sender());
 
         // Read random request ID (used to match requests and responses)
@@ -74,18 +74,18 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
      * Handles FIND_NODE and FIND_VALUE messages
      * For FIND_VALUE, attempts to return stored value; otherwise returns closest nodes
      */
-    private void handleFindNodeOrValue(ChannelHandlerContext ctx, ByteBuf buffer, MessageType messageType, byte[] randomId, InetSocketAddress sender) throws IOException, ClassNotFoundException {
+    private void handleFindNodeOrValue(ChannelHandlerContext ctx, ByteBuf buffer, Kademlia.MsgType messageType, byte[] randomId, InetSocketAddress sender) throws IOException, ClassNotFoundException {
         int nodeInfoLength = buffer.readInt();
         ByteBuf nodeInfoBytes = buffer.readBytes(nodeInfoLength);
         NodeInfo nodeInfo = (NodeInfo) Utils.deserialize(nodeInfoBytes);
 
-        if (messageType == MessageType.FIND_VALUE) {
+        if (messageType == Kademlia.MsgType.FIND_VALUE) {
             if (handleFindValue(ctx, buffer, nodeInfo, messageType, randomId, sender)) {
                 nodeInfoBytes.release();
                 return;  // Value found and response sent
             }
             // Value not found, fallback to FIND_NODE logic
-            messageType = MessageType.FIND_NODE;
+            messageType = Kademlia.MsgType.FIND_NODE;
         }
 
         logger.info("Received node info: " + nodeInfo);
@@ -105,7 +105,7 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
      * Returns true if value found and response sent, false otherwise
      */
     private boolean handleFindValue(ChannelHandlerContext ctx, ByteBuf buffer, NodeInfo requesterNode,
-                                    MessageType messageType, byte[] randomId, InetSocketAddress sender) throws IOException {
+                                    Kademlia.MsgType messageType, byte[] randomId, InetSocketAddress sender) throws IOException {
         int keyLength = buffer.readInt();
         String key = buffer.readCharSequence(keyLength, StandardCharsets.UTF_8).toString();
 
@@ -123,7 +123,7 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
     /**
      * Handles STORE messages to store a key-value pair in the local node
      */
-    private void handleStore(ChannelHandlerContext ctx, ByteBuf buffer, MessageType messageType, byte[] randomId, InetSocketAddress sender) throws IOException, ClassNotFoundException {
+    private void handleStore(ChannelHandlerContext ctx, ByteBuf buffer, Kademlia.MsgType messageType, byte[] randomId, InetSocketAddress sender) throws IOException, ClassNotFoundException {
         int keyLength = buffer.readInt();
         String key = buffer.readCharSequence(keyLength, StandardCharsets.UTF_8).toString();
 
@@ -147,7 +147,7 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
     /**
      * Handles PING messages by responding with an acknowledgment
      */
-    private void handlePing(ChannelHandlerContext ctx, ByteBuf buffer, MessageType messageType, byte[] randomId, InetSocketAddress sender) {
+    private void handlePing(ChannelHandlerContext ctx, ByteBuf buffer, Kademlia.MsgType messageType, byte[] randomId, InetSocketAddress sender) {
         int pingMsgLength = buffer.readInt();
         ByteBuf pingMsgBytes = buffer.readBytes(pingMsgLength);
         String pingMsg = pingMsgBytes.toString(StandardCharsets.UTF_8);
@@ -162,7 +162,7 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
     /**
      * Handles NOTIFY messages which announce a new block hash
      */
-    private void handleNotify(ChannelHandlerContext ctx, ByteBuf buffer, MessageType messageType, byte[] randomId, InetSocketAddress sender) {
+    private void handleNotify(ChannelHandlerContext ctx, ByteBuf buffer, Kademlia.MsgType messageType, byte[] randomId, InetSocketAddress sender) {
         int blockHashLength = buffer.readInt();
         String blockHash = buffer.readCharSequence(blockHashLength, StandardCharsets.UTF_8).toString();
 
@@ -176,7 +176,7 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
     /**
      * Handles LATEST_BLOCK requests by returning the latest block hash
      */
-    private void handleLatestBlock(ChannelHandlerContext ctx, ByteBuf buffer, MessageType messageType, byte[] randomId, InetSocketAddress sender) {
+    private void handleLatestBlock(ChannelHandlerContext ctx, ByteBuf buffer, Kademlia.MsgType messageType, byte[] randomId, InetSocketAddress sender) {
         int requestLength = buffer.readInt();
         String request = buffer.readCharSequence(requestLength, StandardCharsets.UTF_8).toString();
 
@@ -201,7 +201,7 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
     /**
      * Handles NEW_AUCTION messages announcing a new auction
      */
-    private void handleNewAuction(ChannelHandlerContext ctx, ByteBuf buffer, MessageType messageType, byte[] randomId, InetSocketAddress sender) throws IOException, ClassNotFoundException {
+    private void handleNewAuction(ChannelHandlerContext ctx, ByteBuf buffer, Kademlia.MsgType messageType, byte[] randomId, InetSocketAddress sender) throws IOException, ClassNotFoundException {
         int auctionIdLength = buffer.readInt();
         String auctionId = buffer.readCharSequence(auctionIdLength, StandardCharsets.UTF_8).toString();
 
@@ -215,7 +215,7 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
     /**
      * Handles AUCTION_UPDATE messages which update bids or subscribers on an auction
      */
-    private void handleAuctionUpdate(ChannelHandlerContext ctx, ByteBuf buffer, MessageType messageType, byte[] randomId, InetSocketAddress sender) {
+    private void handleAuctionUpdate(ChannelHandlerContext ctx, ByteBuf buffer, Kademlia.MsgType messageType, byte[] randomId, InetSocketAddress sender) {
         try {
             int auctionIdLength = buffer.readInt();
             String auctionId = buffer.readCharSequence(auctionIdLength, StandardCharsets.UTF_8).toString();
@@ -256,7 +256,7 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
     /**
      * Sends a serialized response message back to the sender
      */
-    private void sendSerializedResponse(ChannelHandlerContext ctx, MessageType messageType, byte[] randomId, InetSocketAddress sender,
+    private void sendSerializedResponse(ChannelHandlerContext ctx, Kademlia.MsgType messageType, byte[] randomId, InetSocketAddress sender,
                                         Object msg, String successLog) throws IOException {
         ByteBuf response = ctx.alloc().buffer();
 
@@ -275,7 +275,7 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
     /**
      * Sends a simple acknowledgment message
      */
-    private void sendAck(ChannelHandlerContext ctx, MessageType messageType, byte[] randomId, InetSocketAddress sender) {
+    private void sendAck(ChannelHandlerContext ctx, Kademlia.MsgType messageType, byte[] randomId, InetSocketAddress sender) {
         ByteBuf ackMsg = ctx.alloc().buffer();
 
         ackMsg.writeInt(messageType.ordinal());

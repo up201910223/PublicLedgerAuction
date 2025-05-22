@@ -1,7 +1,8 @@
 package Main;
 
 import KademliaDHT.Node;
-import KademliaDHT.ServerHandler;
+import KademliaDHT.ServerDHT;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -61,7 +62,7 @@ public class NetworkServer implements Runnable {
             .handler(new ChannelInitializer<NioDatagramChannel>() {
                 @Override
                 protected void initChannel(NioDatagramChannel ch) {
-                    ch.pipeline().addLast(new ServerHandler(localNode));
+                    ch.pipeline().addLast(new ServerDHT(localNode));
                 }
             });
 
