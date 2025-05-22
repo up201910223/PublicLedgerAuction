@@ -1,4 +1,4 @@
-package Kademlia;
+package KademliaDHT;
 
 import java.io.*;
 import java.security.MessageDigest;
