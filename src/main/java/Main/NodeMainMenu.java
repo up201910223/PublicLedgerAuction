@@ -20,7 +20,7 @@ import java.util.Scanner;
 public class NodeMainMenu implements Runnable {
 
     private final Scanner inputScanner;
-    private final KademliaDHT dht;
+    private final Kademlia dht;
     private final Blockchain chain;
     private final Wallet wallet;
     private final Node thisNode;
@@ -32,7 +32,7 @@ public class NodeMainMenu implements Runnable {
      */
     public NodeMainMenu(Node thisNode) {
         this.inputScanner = new Scanner(System.in);
-        this.dht = KademliaDHT.getInstance();
+        this.dht = Kademlia.getInstance();
         this.chain = Blockchain.getInstance();
         this.wallet = Wallet.getInstance();
         this.thisNode = thisNode;
