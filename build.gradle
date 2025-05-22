@@ -1,19 +1,19 @@
-plugins {
+plugins{
     id 'java'
     id 'application'
 }
 
-group = 'com.example'
-version = '1.0'
+group 'com.example'
+version '1.0'
 
 repositories {
     mavenCentral()
 }
 
-dependencies {
-    implementation 'io.netty:netty-all:4.1.108.Final'
+dependencies{
+    implementation 'io.netty:netty-all:4.1.107.Final'
 }
 
 application {
-    mainClass = 'Main.NodeClient'
+    mainClassName = 'Main.NodeClient'
 }
