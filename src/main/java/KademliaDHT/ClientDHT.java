@@ -22,14 +22,14 @@ public class ClientDHT extends ChannelInboundHandlerAdapter {
     private NodeInfo localNode;                  // Node sending the message
     private NodeInfo remoteNode;                 // Node receiving the message
     private List<NodeInfo> neighbors;            // Known neighboring nodes
-    private Kademlia.MessageType type;           // Type of message being sent
+    private KademliaDHT.Kademlia.MsgType type;           // Type of message being sent
     private String messageKey;                   // Key involved in the message (if applicable)
     private ValueWrapper messageValue;           // Value associated with the key (for STORE, etc.)
     private Timer timeoutTimer;                  // Timer to handle response timeouts
     private byte[] identifier;                   // Unique identifier for this message
 
     public ClientDHT(NodeInfo localNode, NodeInfo remoteNode, String messageKey,
-                     ValueWrapper messageValue, Kademlia.MessageType type, List<NodeInfo> neighbors) {
+                     ValueWrapper messageValue, KademliaDHT.Kademlia.MsgType type, List<NodeInfo> neighbors) {
         this.localNode = localNode;
         this.remoteNode = remoteNode;
         this.messageKey = messageKey;
@@ -56,7 +56,7 @@ public class ClientDHT extends ChannelInboundHandlerAdapter {
         switch (type) {
             case FIND_NODE, FIND_VALUE -> {
                 appendNodeInfo(buffer);
-                if (type == Kademlia.MessageType.FIND_VALUE) {
+                if (type == KademliaDHT.Kademlia.MsgType.FIND_VALUE) {
                     writeKey(buffer);
                     logMessage = "Sent key: " + messageKey + " and node info to " + formatAddress(remoteNode);
                 } else {
@@ -99,7 +99,7 @@ public class ClientDHT extends ChannelInboundHandlerAdapter {
         Utils.sendPacket(ctx, buffer, new InetSocketAddress(remoteNode.getIpAddr(), remoteNode.getPort()), type, logMessage);
 
         // Start timeout timer (except for NEW_AUCTION which doesn't expect a reply)
-        if (type != Kademlia.MessageType.NEW_AUCTION) {
+        if (type != KademliaDHT.Kademlia.MsgType.NEW_AUCTION) {
             startTimeout();
         }
     }
@@ -109,13 +109,13 @@ public class ClientDHT extends ChannelInboundHandlerAdapter {
      */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object received) throws IOException, ClassNotFoundException {
-        if (type != Kademlia.MessageType.NEW_AUCTION) {
+        if (type != KademliaDHT.Kademlia.MsgType.NEW_AUCTION) {
             cancelTimeout();  // Cancel timeout on valid response
         }
 
         if (received instanceof DatagramPacket packet) {
             ByteBuf content = packet.content();
-            type = Kademlia.MessageType.values()[content.readInt()]; // Read message type
+            type = KademliaDHT.Kademlia.MsgType.values()[content.readInt()]; // Read message type
 
             byte[] receivedId = new byte[content.readInt()];
             content.readBytes(receivedId);
@@ -146,7 +146,7 @@ public class ClientDHT extends ChannelInboundHandlerAdapter {
         ByteBuf serialized = buffer.readBytes(buffer.readInt());
         Object data = Utils.deserialize(serialized);
 
-        if (type == Kademlia.MessageType.FIND_VALUE) {
+        if (type == KademliaDHT.Kademlia.MsgType.FIND_VALUE) {
             messageValue.setValue(data);
             LOG.info("Fetched value: " + data + " from " + ctx.channel().remoteAddress());
         } else if (data instanceof ArrayList<?> list && !list.isEmpty() && list.get(0) instanceof NodeInfo) {

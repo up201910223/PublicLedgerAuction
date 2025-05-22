@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static KademliaDHT.Kademlia.MessageType;
+import static KademliaDHT.KademliaDHT.Kademlia.MsgType;
 
 /**
  * UDP Server handler for incoming Kademlia messages

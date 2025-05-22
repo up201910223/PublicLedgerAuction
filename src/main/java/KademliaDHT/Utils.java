@@ -150,7 +150,7 @@ public class Utils {
      * @param messageType  The type of message being sent
      * @param success      Log message upon successful sending
      */
-    public static void sendPacket(ChannelHandlerContext ctx, ByteBuf msg, InetSocketAddress sender, Kademlia.MessageType messageType, String success) {
+    public static void sendPacket(ChannelHandlerContext ctx, ByteBuf msg, InetSocketAddress sender, KademliaDHT.Kademlia.MsgType messageType, String success) {
         ctx.writeAndFlush(new DatagramPacket(msg, sender)).addListener(future -> {
             if (!future.isSuccess()) {
                 ChannelFuture closeFuture = ctx.channel().close();
