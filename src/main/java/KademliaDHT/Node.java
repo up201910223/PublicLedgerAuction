@@ -6,7 +6,7 @@ public class Node {
 
     private NodeInfo selfInfo;
     private Set<NodeInfo> peers;
-    private Map<String, Object> dataStore;
+    private Map<String, Object> keyValueStore;
 
     /**
      * Initializes a Node with the given NodeInfo
@@ -16,7 +16,7 @@ public class Node {
     public Node(NodeInfo nodeInfo) {
         this.selfInfo = nodeInfo;
         this.peers = new HashSet<>();
-        this.dataStore = new HashMap<>();
+        this.keyValueStore = new HashMap<>();
     }
 
     /**
@@ -25,7 +25,7 @@ public class Node {
      * @param id The node ID to locate
      * @return The NodeInfo if found, otherwise null
      */
-    public NodeInfo getNodeInfoById(String id) {
+    public NodeInfo findNodeInfoById(String id) {
         return peers.stream()
             .filter(peer -> peer.getNodeId().equals(id))
             .findFirst()
@@ -47,8 +47,8 @@ public class Node {
      * @param key The key to store.
      * @param value The value associated with the key
      */
-    public void putData(String key, Object value) {
-        dataStore.put(key, value);
+    public void storeKeyValue(String key, Object value) {
+        keyValueStore.put(key, value);
     }
 
     /**
@@ -57,8 +57,8 @@ public class Node {
      * @param key The key to search.
      * @return The associated value or null if not found
      */
-    public Object getData(String key) {
-        return dataStore.get(key);
+    public Object findValueByKey(String key) {
+        return keyValueStore.get(key);
     }
 
     /**

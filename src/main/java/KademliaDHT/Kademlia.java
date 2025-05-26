@@ -178,7 +178,7 @@ public class Kademlia {
     /**
      * Determines the best node to store a key based on XOR distance.
      */
-    private NodeInfo locateNodeForKey(NodeInfo selfInfo, String key, List<NodeInfo> candidates) {
+    private NodeInfo findNodeForKey(NodeInfo selfInfo, String key, List<NodeInfo> candidates) {
         NodeInfo bestNode = selfInfo;
         int minDistance = Utils.calculateDistance(selfInfo.getNodeId(), key);
 
@@ -195,7 +195,7 @@ public class Kademlia {
     /**
      * Broadcasts an updated block hash to the network.
      */
-    public void notifyBlockUpdate(NodeInfo selfInfo, Set<NodeInfo> routingSet, String newHash) {
+    public void notifyNewBlockHash(NodeInfo selfInfo, Set<NodeInfo> routingSet, String newHash) {
         LOGGER.info("Starting block hash notification");
         if (!newHash.contentEquals(this.currentBlockHash)) {
             currentBlockHash = new StringBuilder(newHash);
@@ -211,7 +211,7 @@ public class Kademlia {
     /**
      * Announces a new auction ID to all peers.
      */
-    public void broadcastAuction(NodeInfo selfInfo, Set<NodeInfo> routingSet, String auctionId) {
+    public void broadcastNewAuction(NodeInfo selfInfo, Set<NodeInfo> routingSet, String auctionId) {
         LOGGER.info("Broadcasting new auction");
         if (this.currentAuctionId == null || !auctionId.contentEquals(this.currentAuctionId)) {
             this.currentAuctionId = new StringBuilder(auctionId);
@@ -226,7 +226,7 @@ public class Kademlia {
     /**
      * Checks whether a routing table contains a specific node.
      */
-    public boolean routingTableContains(Set<NodeInfo> routingSet, String nodeId) {
+    public boolean contains(Set<NodeInfo> routingSet, String nodeId) {
         for (NodeInfo node : routingSet) {
             if (node.getNodeId().equals(nodeId)) {
                 return true;
@@ -294,7 +294,7 @@ public class Kademlia {
     /**
      * Core communication method to send messages between nodes.
      */
-    private Object connectAndCommunicate(NodeInfo selfInfo, NodeInfo targetInfo, String key, ValueWrapper value, MsgType type) {
+    private Object connectAndHandle(NodeInfo selfInfo, NodeInfo targetInfo, String key, ValueWrapper value, MsgType type) {
         List<NodeInfo> nearNodes = new ArrayList<>();
         EventLoopGroup eventGroup = new NioEventLoopGroup();
         try {
@@ -323,7 +323,7 @@ public class Kademlia {
     /**
      * Establishes a Netty connection and sets up channel pipeline with custom handler.
      */
-    private void establishConnection(NodeInfo selfInfo, NodeInfo targetInfo, EventLoopGroup group, MessagePassingQueue.Consumer<Channel> channelSetup) throws InterruptedException {
+    private void connectToNode(NodeInfo selfInfo, NodeInfo targetInfo, EventLoopGroup group, MessagePassingQueue.Consumer<Channel> channelSetup) throws InterruptedException {
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(group)
                 .channel(NioDatagramChannel.class)
@@ -342,11 +342,11 @@ public class Kademlia {
     }
 
     // Getter/setter for current block hash
-    public StringBuilder getCurrentBlockHash() {
+    public StringBuilder getLatestBlockHash() {
         return currentBlockHash;
     }
 
-    public void setCurrentBlockHash(String newHash) {
+    public void setLatestBlockHash(String newHash) {
         this.currentBlockHash = new StringBuilder(newHash);
     }
 }

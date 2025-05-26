@@ -1,4 +1,4 @@
-package KademliaDHT;
+package main.java.KademliaDHT;
 
 import java.io.*;
 
