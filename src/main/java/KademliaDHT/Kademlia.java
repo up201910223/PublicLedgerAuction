@@ -243,7 +243,7 @@ public class Kademlia {
 
         // Ensure all subscribers are reachable
         for (String subscriberId : auction.getSubscribers()) {
-            if (!routingTableContains(routingSet, subscriberId) &&
+            if (!contains(routingSet, subscriberId) &&
                 !subscriberId.equals(selfInfo.getNodeId()) &&
                 !subscriberId.equals(auction.getStoredNodeId())) {
                 findNode(selfInfo, subscriberId, routingSet);
@@ -277,7 +277,7 @@ public class Kademlia {
         LOGGER.info("Notifying about new subscriber");
 
         for (String subscriberId : auction.getSubscribers()) {
-            if (!routingTableContains(routingSet, subscriberId) &&
+            if (!contains(routingSet, subscriberId) &&
                 !subscriberId.equals(selfInfo.getNodeId()) &&
                 !subscriberId.equals(auction.getStoredNodeId())) {
                 findNode(selfInfo, subscriberId, routingSet);
@@ -298,8 +298,8 @@ public class Kademlia {
         List<NodeInfo> nearNodes = new ArrayList<>();
         EventLoopGroup eventGroup = new NioEventLoopGroup();
         try {
-            establishConnection(selfInfo, targetInfo, eventGroup, channel -> {
-                ClientHandler handler = new ClientHandler(selfInfo, targetInfo, key, value, type, nearNodes);
+            connectToNode(selfInfo, targetInfo, eventGroup, channel -> {
+                ClientDHT handler = new ClientDHT(selfInfo, targetInfo, key, value, type, nearNodes);
                 channel.pipeline().addLast(handler);
             });
         } catch (InterruptedException e) {
