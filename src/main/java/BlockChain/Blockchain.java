@@ -52,7 +52,7 @@ public class Blockchain {
     private Block createGenesisBlock() {
         List<Transaction> genesisTransactions = new ArrayList<>();
 
-        KeyPair receiver = Wallet.createRSAKeyPair(); // Gera um destinatário fictício
+        KeyPair receiver = Wallet.generateKeyPair(); // Gera um destino fictício
         Transaction tx = new Transaction(receiver.getPublic(), 0); // Transação simbólica com valor 0
         tx.signTransaction(wallet.getPrivateKey()); // Assinada com a chave privada da carteira
         genesisTransactions.add(tx);
