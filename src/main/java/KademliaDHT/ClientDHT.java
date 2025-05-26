@@ -56,7 +56,7 @@ public class ClientDHT extends ChannelInboundHandlerAdapter {
         switch (type) {
             case FIND_NODE, FIND_VALUE -> {
                 appendNodeInfo(buffer);
-                if (type == KademliaDHT.Kademlia.MsgType.FIND_VALUE) {
+                if (type == Kademlia.MsgType.FIND_VALUE) {
                     writeKey(buffer);
                     logMessage = "Sent key: " + messageKey + " and node info to " + formatAddress(remoteNode);
                 } else {

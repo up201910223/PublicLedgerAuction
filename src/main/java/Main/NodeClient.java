@@ -36,7 +36,7 @@ public class NodeClient {
 
         try {
             Node kademliaNode = new Node(new NodeInfo(currentNode.hostAddress, currentNode.networkPort));
-            KademliaDHT dhtInstance = Kademlia.getInstance();
+            Kademlia dhtInstance = Kademlia.getInstance();
 
             if (args.length == 2) {
                 String bootstrapIp = args[1];
