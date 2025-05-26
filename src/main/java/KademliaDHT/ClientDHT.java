@@ -147,7 +147,7 @@ public class ClientDHT extends ChannelInboundHandlerAdapter {
         Object data = Utils.deserialize(serialized);
 
         if (type == Kademlia.MsgType.FIND_VALUE) {
-            messageValue.setValue(data);
+            messageValue.updateValue(data);
             LOG.info("Fetched value: " + data + " from " + ctx.channel().remoteAddress());
         } else if (data instanceof ArrayList<?> list && !list.isEmpty() && list.get(0) instanceof NodeInfo) {
             @SuppressWarnings("unchecked")
