@@ -1,4 +1,4 @@
-package BlockChain;
+package main.java.BlockChain;
 
 /**
  * Classe Miner: Representa um minerador na blockchain.

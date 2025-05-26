@@ -1,4 +1,4 @@
-package Auctions;
+package main.java.Auctions;
 
 import java.io.*;
 import java.security.*;

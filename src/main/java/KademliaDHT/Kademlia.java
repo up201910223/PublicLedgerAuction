@@ -1,6 +1,6 @@
-package KademliaDHT;
+package main.java.KademliaDHT;
 
-import Auctions.Auction;
+import main.java.Auctions.Auction;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -11,8 +11,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import static BlockChain.Constants.GENESIS_PREV_HASH;
-import static KademliaDHT.Utils.findClosestNodes;
+import static main.java.BlockChain.Constants.GENESIS_PREV_HASH;
+import static main.java.KademliaDHT.Utils.findClosestNodes;
 
 public class Kademlia {
 

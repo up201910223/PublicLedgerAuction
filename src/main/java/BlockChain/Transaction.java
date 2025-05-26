@@ -1,7 +1,7 @@
-package BlockChain;
+package main.java.BlockChain;
 
-import Auctions.CryptoUtils;
-import Auctions.Wallet;
+import main.java.Auctions.CryptoUtils;
+import main.java.Auctions.Wallet;
 
 import java.io.*;
 import java.security.*;

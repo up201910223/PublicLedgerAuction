@@ -1,4 +1,4 @@
-package BlockChain;
+package main.java.BlockChain;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

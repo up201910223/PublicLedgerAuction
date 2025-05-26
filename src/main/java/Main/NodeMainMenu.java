@@ -1,13 +1,13 @@
-package Main;
+package main.java.Main;
 
-import Auctions.Auction;
-import Auctions.CryptoUtils;
-import Auctions.Wallet;
-import BlockChain.Block;
-import BlockChain.Blockchain;
-import BlockChain.Miner;
-import BlockChain.Transaction;
-import KademliaDHT.*;
+import main.java.Auctions.Auction;
+import main.java.Auctions.CryptoUtils;
+import main.java.Auctions.Wallet;
+import main.java.BlockChain.Block;
+import main.java.BlockChain.Blockchain;
+import main.java.BlockChain.Miner;
+import main.java.BlockChain.Transaction;
+import main.java.KademliaDHT.*;
 
 import java.security.*;
 import java.util.ArrayList;

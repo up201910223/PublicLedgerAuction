@@ -1,22 +1,48 @@
-package BlockChain;
+package main.java.BlockChain;
+
+import main.java.Auctions.Auction;
+import main.java.Auctions.Wallet;
+import main.java.BlockChain.Transaction;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.security.*;
+import java.util.logging.Logger;
 
 /**
  * Representa uma Blockchain, que é uma lista encadeada de blocos.
  */
 public class Blockchain {
     private List<Block> chain;
-    private int difficulty; // Nível de dificuldade da mineração
+    private final int difficulty; // Nível de dificuldade da mineração
+    private List<Transaction> pendingTransactions; // Transações à espera de serem incluídas em blocos
+    private final Wallet wallet; // Carteira associada à Blockchain
 
+    private static final Logger logger = Logger.getLogger(Blockchain.class.getName());
+
+    // Singleton — garante que só existe uma instância da Blockchain
+    private static Blockchain instance;
     /**
-     * Construtor da Blockchain. Inicia com o bloco génesis e define a dificuldade.
+     * Construtor da Blockchain. Inicia com o bloco génesis com dificuldade default.
      */
-    public Blockchain(int difficulty) {
+    private Blockchain() {
         this.chain = new ArrayList<>();
-        this.difficulty = difficulty;
+        this.wallet = Wallet.getInstance();
+        this.pendingTransactions = new ArrayList<>();
+        this.difficulty = Constants.DIFFICULTY; // Importa o nível de dificuldade da classe Constants
+        Block genesisBlock = createGenesisBlock();
         chain.add(createGenesisBlock());
+    }
+    /**
+     * Obtém singleton ds instãnica da classe Blockchain.
+     *
+     * @return Singleton ds instãnica da classe Blockchain.
+     */
+    public static Blockchain getInstance() {
+        if (instance == null) {
+            instance = new Blockchain();
+        }
+        return instance;
     }
 
     /**
@@ -24,8 +50,15 @@ public class Blockchain {
      * @return O bloco génesis.
      */
     private Block createGenesisBlock() {
-        Block genesis = new Block(0, "Genesis Block", "0");
-        genesis.mineBlock(difficulty); // Minera o bloco génesis
+        List<Transaction> genesisTransactions = new ArrayList<>();
+
+        KeyPair receiver = Wallet.createRSAKeyPair(); // Gera um destinatário fictício
+        Transaction tx = new Transaction(receiver.getPublic(), 0); // Transação simbólica com valor 0
+        tx.signTransaction(wallet.getPrivateKey()); // Assinada com a chave privada da carteira
+        genesisTransactions.add(tx);
+
+        Block genesis = new Block(0, Constants.GENESIS_PREV_HASH, genesisTransactions);
+        genesis.mineBlock(difficulty);
         return genesis;
     }
 
@@ -38,14 +71,32 @@ public class Blockchain {
     }
 
     /**
-     * Adiciona um novo bloco à blockchain e realiza a mineração.
-     * @param data Dados a armazenar no novo bloco.
+     * Adiciona um novo bloco à blockchain.
      */
-    public void addBlock(String data) {
-        Block previousBlock = getLatestBlock();
-        Block newBlock = new Block(previousBlock.getIndex() + 1, data, previousBlock.getHash());
-        newBlock.mineBlock(difficulty); // Mineração do bloco antes de adicioná-lo
-        chain.add(newBlock);
+    public void addBlock(Block block) {
+        this.chain.add(block);
+    }
+    /**
+     * Adição de transações pendentes com verificação de assinatura. 
+     */
+    public boolean addTransaction(Transaction tx) {
+        if (tx == null || !tx.verifySignature()) {
+            logger.warning("Transação inválida ou nula. Rejeitada.");
+            return false;
+        }
+        pendingTransactions.add(tx);
+        return true;
+    }
+    /*
+     *  Método toString() para impressão da blockchain
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("Blockchain:\n");
+        for (Block block : chain) {
+            sb.append(block).append("\n");
+        }
+        return sb.toString();
     }
 
     /**
@@ -54,7 +105,7 @@ public class Blockchain {
     public void printBlockchain() {
         for (Block block : chain) {
             System.out.println("Index: " + block.getIndex());
-            System.out.println("Timestamp: " + block.getData());
+            System.out.println("Timestamp: " + block.getTimestamp());
             System.out.println("Previous Hash: " + block.getPreviousHash());
             System.out.println("Hash: " + block.getHash());
             System.out.println("Nonce: " + block.getNonce());

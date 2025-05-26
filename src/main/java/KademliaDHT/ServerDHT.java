@@ -1,6 +1,6 @@
-package KademliaDHT;
+package main.java.KademliaDHT;
 
-import Auctions.Auction;
+import main.java.Auctions.Auction;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import KademliaDHT.Kademlia.MsgType;
+import main.java.KademliaDHT.Kademlia.MsgType;
 
 /**
  * UDP Server handler for incoming Kademlia messages
