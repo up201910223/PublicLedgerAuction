@@ -37,7 +37,7 @@ public class Node {
      * 
      * @param info The node information to add
      */
-    public void addOrUpdatePeer(NodeInfo info) {
+    public void updateRoutingTable(NodeInfo info) {
         peers.add(info);
     }
 
@@ -66,7 +66,7 @@ public class Node {
      * 
      * @return this node's information
      */
-    public NodeInfo getSelfInfo() {
+    public NodeInfo getNodeInfo() {
         return selfInfo;
     }
 
@@ -75,7 +75,7 @@ public class Node {
      * 
      * @return the set of known peers
      */
-    public Set<NodeInfo> getPeers() {
+    public Set<NodeInfo> getRoutingTable() {
         return peers;
     }
 }

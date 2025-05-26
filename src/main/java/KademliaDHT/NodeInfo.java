@@ -10,9 +10,9 @@ import java.util.logging.Logger;
 public class NodeInfo implements Serializable, Comparable<NodeInfo> {
     private static final Logger logger = Logger.getLogger(NodeInfo.class.getName());
 
-    private final String nodeId;
-    private final String ipAddr;
-    private final int port;
+    private String nodeId;
+    private String ipAddr;
+    private int port;
 
     /**
      * Constructs a NodeInfo object with the specified IP address and port
