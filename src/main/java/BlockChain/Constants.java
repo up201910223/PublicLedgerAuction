@@ -4,7 +4,7 @@
  * e o hash anterior do bloco génesis, promovendo clareza, consistência e facilidade de manutenção.
  */
 
-package BlockChain;
+package main.java.BlockChain;
 
 public class Constants {
     private Constants(){}

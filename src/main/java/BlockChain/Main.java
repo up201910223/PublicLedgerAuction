@@ -1,6 +1,6 @@
-package BlockChain;
+package main.java.BlockChain;
 
-import Auctions.*;
+import main.java.Auctions.*;
 
 public class Main {
     public static void main(String[] args) {

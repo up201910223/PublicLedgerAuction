@@ -1,7 +1,7 @@
-package Main;
+package main.java.Main;
 
-import KademliaDHT.Node;
-import KademliaDHT.ServerDHT;
+import main.java.KademliaDHT.Node;
+import main.java.KademliaDHT.ServerDHT;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;

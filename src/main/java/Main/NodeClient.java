@@ -1,6 +1,6 @@
-package Main;
+package main.java.Main;
 
-import KademliaDHT.*;
+import main.java.KademliaDHT.*;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
