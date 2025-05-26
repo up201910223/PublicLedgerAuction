@@ -10,7 +10,7 @@ public class ValueWrapper implements Serializable {
         this.storedValue = storedValue;
     }
 
-    public Object retrieveValue() {
+    public Object getValue() {
         return storedValue;
     }
 

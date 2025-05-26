@@ -66,7 +66,7 @@ public class Blockchain {
      * Obtém o último bloco da cadeia.
      * @return Último bloco.
      */
-    public Block getLatestBlock() {
+    public Block getLastBlock() {
         return chain.get(chain.size() - 1);
     }
 

@@ -52,7 +52,7 @@ public class Kademlia {
         List<NodeInfo> initialNearNodes = findNode(selfNode.getNodeInfo(), bootstrapNodeId, selfNode.getRoutingTable());
 
         // Ask the bootstrap node for the latest block
-        connectAndCommunicate(selfNode.getNodeInfo(), selfNode.findNodeInfoById(bootstrapNodeId), null, null, MsgType.LATEST_BLOCK);
+        connectAndHandle(selfNode.getNodeInfo(), selfNode.findNodeInfoById(bootstrapNodeId), null, null, MsgType.LATEST_BLOCK);
 
         // Remove bootstrap node from table temporarily to avoid duplication
         selfNode.getRoutingTable().remove(selfNode.findNodeInfoById(bootstrapNodeId));
@@ -86,7 +86,7 @@ public class Kademlia {
         for (NodeInfo node : routingSet) {
             if (node.getNodeId().equals(targetId)) {
                 LOGGER.info("Target node found: " + node);
-                return (List<NodeInfo>) connectAndCommunicate(selfInfo, node, null, null, MsgType.FIND_NODE);
+                return (List<NodeInfo>) connectAndHandle(selfInfo, node, null, null, MsgType.FIND_NODE);
             }
         }
 
@@ -95,14 +95,14 @@ public class Kademlia {
         List<NodeInfo> collectedNodes = new ArrayList<>();
 
         for (NodeInfo closest : closestNodes) {
-            collectedNodes.addAll((List<NodeInfo>) connectAndCommunicate(selfInfo, closest, null, null, MsgType.FIND_NODE));
+            collectedNodes.addAll((List<NodeInfo>) connectAndHandle(selfInfo, closest, null, null, MsgType.FIND_NODE));
         }
 
         // Check if any of the new nodes match
         for (NodeInfo node : collectedNodes) {
             if (node.getNodeId().equals(targetId)) {
                 LOGGER.info("Target node found in collected nodes: " + node);
-                return (List<NodeInfo>) connectAndCommunicate(selfInfo, node, null, null, MsgType.FIND_NODE);
+                return (List<NodeInfo>) connectAndHandle(selfInfo, node, null, null, MsgType.FIND_NODE);
             }
         }
 
@@ -118,7 +118,7 @@ public class Kademlia {
         for (NodeInfo node : routingSet) {
             if (node.getNodeId().equals(targetId)) {
                 LOGGER.info("Node located: " + node);
-                connectAndCommunicate(selfInfo, node, null, null, MsgType.PING);
+                connectAndHandle(selfInfo, node, null, null, MsgType.PING);
                 return;
             }
         }
@@ -141,7 +141,7 @@ public class Kademlia {
 
         List<NodeInfo> nearbyNodes = findClosestNodes(localNode.getRoutingTable(), key, BUCKET_SIZE);
         for (NodeInfo nearNode : nearbyNodes) {
-            Object value = connectAndCommunicate(localNode.getNodeInfo(), nearNode, key, new ValueWrapper(null), MsgType.FIND_VALUE);
+            Object value = connectAndHandle(localNode.getNodeInfo(), nearNode, key, new ValueWrapper(null), MsgType.FIND_VALUE);
             LOGGER.info("Value retrieved from network: " + value);
             // TODO: localNode.storeKeyValue(key, value); // For caching
             return value;
@@ -159,7 +159,7 @@ public class Kademlia {
         findNode(localNode.getNodeInfo(), key, localNode.getRoutingTable());
         List<NodeInfo> closestNodes = findClosestNodes(localNode.getRoutingTable(), key, BUCKET_SIZE);
 
-        NodeInfo nodeToStore = locateNodeForKey(localNode.getNodeInfo(), key, closestNodes);
+        NodeInfo nodeToStore = findNodeForKey(localNode.getNodeInfo(), key, closestNodes);
         if (nodeToStore != null) {
             if (nodeToStore.equals(localNode.getNodeInfo())) {
                 localNode.storeKeyValue(key, value.getValue());
@@ -168,7 +168,7 @@ public class Kademlia {
                 }
                 LOGGER.info("Stored key: " + key + " with value: " + value.getValue());
             } else {
-                connectAndCommunicate(localNode.getNodeInfo(), nodeToStore, key, value, MsgType.STORE);
+                connectAndHandle(localNode.getNodeInfo(), nodeToStore, key, value, MsgType.STORE);
             }
         } else {
             LOGGER.severe("Failed to locate node for storing key-value");
@@ -201,7 +201,7 @@ public class Kademlia {
             currentBlockHash = new StringBuilder(newHash);
             LOGGER.info("Block hash updated");
             for (NodeInfo node : routingSet) {
-                connectAndCommunicate(selfInfo, node, newHash, null, MsgType.NOTIFY);
+                connectAndHandle(selfInfo, node, newHash, null, MsgType.NOTIFY);
             }
         } else {
             LOGGER.info("Block hash unchanged");
@@ -216,7 +216,7 @@ public class Kademlia {
         if (this.currentAuctionId == null || !auctionId.contentEquals(this.currentAuctionId)) {
             this.currentAuctionId = new StringBuilder(auctionId);
             for (NodeInfo node : routingSet) {
-                connectAndCommunicate(selfInfo, node, auctionId, null, MsgType.NEW_AUCTION);
+                connectAndHandle(selfInfo, node, auctionId, null, MsgType.NEW_AUCTION);
             }
         } else {
             LOGGER.info("Auction already broadcasted");
@@ -257,14 +257,14 @@ public class Kademlia {
         for (NodeInfo node : routingSet) {
             if (node.getNodeId().equals(auction.getStoredNodeId())) {
                 if (auction.isOpen()) {
-                    connectAndCommunicate(selfInfo, node, auctionId, new ValueWrapper(currentBid), MsgType.AUCTION_UPDATE);
+                    connectAndHandle(selfInfo, node, auctionId, new ValueWrapper(currentBid), MsgType.AUCTION_UPDATE);
                 }
             }
             if (auction.isSubscriber(node.getNodeId())) {
                 if (auction.isOpen() && !node.getNodeId().equals(auction.getStoredNodeId())) {
-                    connectAndCommunicate(selfInfo, node, auctionId, new ValueWrapper(currentBid), MsgType.AUCTION_UPDATE);
+                    connectAndHandle(selfInfo, node, auctionId, new ValueWrapper(currentBid), MsgType.AUCTION_UPDATE);
                 } else if (!auction.isOpen()) {
-                    connectAndCommunicate(selfInfo, node, auctionId, new ValueWrapper("Auction " + auctionId + " closed."), MsgType.AUCTION_UPDATE);
+                    connectAndHandle(selfInfo, node, auctionId, new ValueWrapper("Auction " + auctionId + " closed."), MsgType.AUCTION_UPDATE);
                 }
             }
         }
@@ -286,7 +286,7 @@ public class Kademlia {
 
         for (NodeInfo node : routingSet) {
             if (node.getNodeId().equals(auction.getStoredNodeId())) {
-                connectAndCommunicate(selfInfo, node, auction.getId(), new ValueWrapper(selfInfo.getNodeId()), MsgType.AUCTION_UPDATE);
+                connectAndHandle(selfInfo, node, auction.getId(), new ValueWrapper(selfInfo.getNodeId()), MsgType.AUCTION_UPDATE);
             }
         }
     }

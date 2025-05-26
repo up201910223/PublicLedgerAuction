@@ -15,7 +15,7 @@ public class Wallet {
      * Construtor. Gera um novo par de chaves RSA de 2048 bits.
      */
     public Wallet() {
-        this.keyPair = createRSAKeyPair();
+        this.keyPair = generateKeyPair();
     }
 
     /**
@@ -36,7 +36,7 @@ public class Wallet {
      *
      * @return KeyPair gerado.
      */
-    public static KeyPair createRSAKeyPair() {
+    public static KeyPair generateKeyPair() {
         try {
             KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
             generator.initialize(2048);
