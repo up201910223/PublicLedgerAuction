@@ -37,6 +37,7 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
      */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws IOException, ClassNotFoundException {
+        System.out.println("Server received a packet!");
         if (!(msg instanceof DatagramPacket packet)) {
             logger.warning("Received unknown message type: " + msg.getClass().getName());
             return;
