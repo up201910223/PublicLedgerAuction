@@ -149,7 +149,14 @@ public class NodeMainMenu implements Runnable {
                 case "8" -> {
                     System.out.println("Enter Auction ID:");
                     String subId = inputScanner.nextLine();
-                    Auction auctionToJoin = (Auction) dht.findValue(thisNode, subId);
+                    Object result = dht.findValue(thisNode, subId);
+                    Auction auctionToJoin = null;
+
+                    if (result instanceof Auction) {
+                        auctionToJoin = (Auction) result;
+                    } else if (result instanceof List<?> list && !list.isEmpty() && list.get(0) instanceof Auction) {
+                        auctionToJoin = (Auction) list.get(0);
+                    }
 
                     if (auctionToJoin != null) {
                         auctionToJoin.addSubscriber(thisNode.getNodeInfo().getNodeId());

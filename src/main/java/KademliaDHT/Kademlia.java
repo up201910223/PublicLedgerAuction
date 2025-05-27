@@ -54,6 +54,8 @@ public class Kademlia {
         // Ask the bootstrap node for the latest block
         connectAndHandle(selfNode.getNodeInfo(), selfNode.findNodeInfoById(bootstrapNodeId), null, null, MsgType.LATEST_BLOCK);
 
+        ping(selfNode.getNodeInfo(), bootstrapNodeId, selfNode.getRoutingTable()); //Im hoping this fixes the issue with the routing table not updating properly
+
         // Remove bootstrap node from table temporarily to avoid duplication
         selfNode.getRoutingTable().remove(selfNode.findNodeInfoById(bootstrapNodeId));
 
