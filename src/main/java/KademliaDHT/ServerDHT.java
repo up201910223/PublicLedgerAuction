@@ -154,6 +154,7 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
         String pingMsg = pingMsgBytes.toString(StandardCharsets.UTF_8);
 
         logger.info("Received PING: " + pingMsg + " from " + sender);
+        myNode.updateRoutingTable(new NodeInfo(sender.getAddress().getHostAddress(), sender.getPort()));
 
         sendAck(ctx, messageType, randomId, sender);
 
@@ -172,6 +173,8 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
         sendAck(ctx, messageType, randomId, sender);
 
         Kademlia.getInstance().notifyNewBlockHash(myNode.getNodeInfo(), myNode.getRoutingTable(), blockHash);
+        myNode.updateRoutingTable(new NodeInfo(sender.getAddress().getHostAddress(), sender.getPort()));
+
     }
 
     /**
@@ -195,8 +198,11 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
         response.writeInt(blockHashBytes.length);
         response.writeBytes(blockHashBytes);
 
+        myNode.updateRoutingTable(new NodeInfo(sender.getAddress().getHostAddress(), sender.getPort()));
+
         Utils.sendPacket(ctx, response, sender, messageType,
                 "Sent latest block hash to " + sender);
+    
     }
 
     /**
@@ -224,8 +230,10 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
             int updateLength = buffer.readInt();
             ByteBuf updateBytes = buffer.readBytes(updateLength);
 
-            Auction auction = (Auction) myNode.findValueByKey(auctionId);
-            if (auction != null) {
+            Object stored = myNode.findValueByKey(auctionId);
+
+            if (stored instanceof Auction auction) {
+                myNode.updateRoutingTable(new NodeInfo(sender.getAddress().getHostAddress(), sender.getPort()));
                 try {
                     Double bid = (Double) Utils.deserialize(updateBytes.copy());
                     auction.setCurrentBid(bid);
@@ -236,6 +244,9 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
                     auction.addSubscriber(subscriber);
                 }
                 myNode.storeKeyValue(auctionId, auction);
+            }
+            else {
+                logger.warning("Invalid value type for auction ID: " + auctionId);
             }
 
             try {
