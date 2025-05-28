@@ -13,10 +13,10 @@ import java.util.logging.Logger;
  * Representa uma Blockchain, que é uma lista encadeada de blocos.
  */
 public class Blockchain {
-    public List<Block> chain;
-    public final int difficulty; // Nível de dificuldade da mineração
-    public List<Transaction> pendingTransactions; // Transações à espera de serem incluídas em blocos
-    public final Wallet wallet; // Carteira associada à Blockchain
+    private List<Block> chain;
+    private final int difficulty; // Nível de dificuldade da mineração
+    private List<Transaction> pendingTransactions; // Transações à espera de serem incluídas em blocos
+    private final Wallet wallet; // Carteira associada à Blockchain
 
     private static final Logger logger = Logger.getLogger(Blockchain.class.getName());
 

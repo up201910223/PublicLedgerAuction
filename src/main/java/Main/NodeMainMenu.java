@@ -22,7 +22,7 @@ public class NodeMainMenu implements Runnable {
 
     private final Scanner inputScanner;
     private final Kademlia dht;
-    public final Blockchain chain;
+    public Blockchain chain;
     private final Wallet wallet;
     private final Node thisNode;
 
@@ -79,7 +79,7 @@ public class NodeMainMenu implements Runnable {
                 case "2" -> {
                     System.out.println("Enter Key:");
                     String key = inputScanner.nextLine();
-                    Block newBlock = new Block(this.chain.getLastBlock.index+1, this.chain.getPreviousHash(), this.chain.getTransactions());
+                    Block newBlock = new Block(chain.getLastBlock.index+1, chain.getPreviousHash(), chain.getTransactions());
                     newBlock.mineBlock(Constants.DIFFICULTY);
                     newBlock.toString();
                     chain.addBlock(newBlock);
@@ -100,7 +100,7 @@ public class NodeMainMenu implements Runnable {
 
                 case "5" -> {
                     System.out.println("Mining block...");
-                    Block minedBlock = new Block(this.chain.getLastBlock.index+1, this.chain.getPreviousHash(), this.chain.getTransactions());
+                    Block minedBlock = new Block(chain.getLastBlock.index+1,chain.getPreviousHash(),chain.getTransactions());
                     minedBlock.mineBlock(Constants.DIFFICULTY);
                     minedBlock.toString();
                     dht.store(thisNode, minedBlock.getHash(), new ValueWrapper(minedBlock));
