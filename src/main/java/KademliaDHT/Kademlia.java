@@ -337,7 +337,7 @@ public class Kademlia {
                     }
                 });
 
-        bootstrap.localAddress(selfInfo.getPort() + 1);
+        bootstrap.localAddress(selfInfo.getPort()); //Add +1 to this if port errors show up
         ChannelFuture future = bootstrap.connect(targetInfo.getIpAddr(), targetInfo.getPort()).sync();
         LOGGER.info("Connected to node " + targetInfo.getIpAddr() + ":" + targetInfo.getPort());
         future.channel().closeFuture().await(3, TimeUnit.SECONDS);
