@@ -52,11 +52,26 @@ public class NodeClient {
                 NetworkServer server = new NetworkServer(currentNode.networkPort, kademliaNode);
                 Thread serverThread = new Thread(server);
                 serverThread.start();
+                // Wait for the server channel to be bound
+                while (server.getChannel() == null) {
+                    Thread.sleep(50);
+                }
+                dhtInstance.setSharedChannel(server.getChannel());
                 LOGGER.log(Level.FINE, "Kademlia server successfully launched.");
                 Kademlia.getInstance().setSharedChannel(server.getChannel());
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Failed to start Kademlia server.", e);
             }
+
+                // Join bootstrap network after server and channel ready
+                if (args.length == 2) {
+                    String[] bootstrapParts = args[1].split(":");
+                    String bootstrapIp = bootstrapParts[0];
+                    int bootstrapPort = Integer.parseInt(bootstrapParts[1]);
+                    NodeInfo bootstrapInfo = new NodeInfo(bootstrapIp, bootstrapPort);
+                    kademliaNode.updateRoutingTable(bootstrapInfo);
+                    dhtInstance.joinNetwork(kademliaNode, bootstrapInfo.getNodeId());
+                }
 
             try {
                 new Thread(new NodeMainMenu(kademliaNode)).start();
