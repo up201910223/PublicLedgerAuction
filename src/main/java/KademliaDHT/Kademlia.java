@@ -306,8 +306,8 @@ public class Kademlia {
         List<NodeInfo> nearNodes = new ArrayList<>();
         // Reuse shared channel for outbound DHT messages without creating new event loops
         try {
-            connectToNode(thisNode.getNodeInfo(), targetInfo, channel -> {
-                ClientDHT handler = new ClientDHT(sharedChannel, thisNode.getNodeInfo(), targetInfo, key, value, type, nearNodes);
+            connectToNode(selfNode.getNodeInfo(), targetInfo, channel -> {
+                ClientDHT handler = new ClientDHT(sharedChannel, selfNode.getNodeInfo(), targetInfo, key, value, type, nearNodes);
                 channel.pipeline().addLast(handler);
             });
         } catch (Exception e) {
