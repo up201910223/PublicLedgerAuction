@@ -54,7 +54,7 @@ public class Kademlia {
         // Ask the bootstrap node for the latest block
         connectAndHandle(selfNode.getNodeInfo(), selfNode.findNodeInfoById(bootstrapNodeId), null, null, MsgType.LATEST_BLOCK);
 
-        ping(selfNode.getNodeInfo(), bootstrapNodeId, selfNode.getRoutingTable()); //Im hoping this fixes the issue with the routing table not updating properly
+        //ping(selfNode.getNodeInfo(), bootstrapNodeId, selfNode.getRoutingTable()); //Im hoping this fixes the issue with the routing table not updating properly
 
         // Remove bootstrap node from table temporarily to avoid duplication
         selfNode.getRoutingTable().remove(selfNode.findNodeInfoById(bootstrapNodeId));
@@ -337,7 +337,7 @@ public class Kademlia {
                     }
                 });
 
-        bootstrap.localAddress(selfInfo.getPort()+1);
+        bootstrap.localAddress(selfInfo.getPort()); // We can add +1 here if we start getting port issues
         ChannelFuture future = bootstrap.connect(targetInfo.getIpAddr(), targetInfo.getPort()).sync();
         LOGGER.info("Connected to node " + targetInfo.getIpAddr() + ":" + targetInfo.getPort());
         future.channel().closeFuture().await(3, TimeUnit.SECONDS);
