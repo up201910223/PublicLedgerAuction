@@ -39,8 +39,11 @@ public class NodeClient {
             Kademlia dhtInstance = Kademlia.getInstance();
 
             if (args.length == 2) {
-                String bootstrapIp = args[1];
-                NodeInfo bootstrapInfo = new NodeInfo(bootstrapIp, currentNode.networkPort);
+                String[] bootstrapParts = args[1].split(":");
+                String bootstrapIp = bootstrapParts[0];
+                int bootstrapPort = Integer.parseInt(bootstrapParts[1]);
+
+                NodeInfo bootstrapInfo = new NodeInfo(bootstrapIp, bootstrapPort);
                 kademliaNode.updateRoutingTable(bootstrapInfo);
                 dhtInstance.joinNetwork(kademliaNode, bootstrapInfo.getNodeId());
             }
