@@ -59,15 +59,54 @@ public class Kademlia {
         // Remove bootstrap node from table temporarily to avoid duplication
         selfNode.getRoutingTable().remove(selfNode.findNodeInfoById(bootstrapNodeId));
 
+        //Notify the bootstrap about the new node
+        LOGGER.info("Notifying bootstrap node about new node...");
         NodeInfo bootstrapNode = selfNode.findNodeInfoById(bootstrapNodeId);
         if (bootstrapNode != null) {
-            connectToNode(bootstrapNode, selfNode.getNodeInfo());
+            EventLoopGroup group = new NioEventLoopGroup();
+            try {
+                connectToNode(selfNode.getNodeInfo(), bootstrapNode, group, channel -> {
+                    ClientDHT handler = new ClientDHT(
+                        selfNode.getNodeInfo(),
+                        bootstrapNode,
+                        null,
+                        null,
+                        MsgType.PING, // Or MsgType.NOTIFY if you later define it
+                        new ArrayList<>()
+                    );
+                    channel.pipeline().addLast(handler);
+                });
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                LOGGER.severe("Error notifying bootstrap node: " + e.getMessage());
+            } finally {
+                group.shutdownGracefully();
+            }
         }
 
-        // Notify other known nodes about this node
+        //Notify all other nodes about the new node
+        LOGGER.info("Notifying known nodes about new node...");
         for (NodeInfo knownNode : selfNode.getRoutingTable()) {
             if (!knownNode.getNodeId().equals(selfNode.getNodeInfo().getNodeId())) {
-                connectToNode(knownNode, selfNode.getNodeInfo());
+                EventLoopGroup group = new NioEventLoopGroup();
+                try {
+                    connectToNode(selfNode.getNodeInfo(), knownNode, group, channel -> {
+                        ClientDHT handler = new ClientDHT(
+                            selfNode.getNodeInfo(),
+                            knownNode,
+                            null,
+                            null,
+                            MsgType.PING,
+                            new ArrayList<>()
+                        );
+                        channel.pipeline().addLast(handler);
+                    });
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    LOGGER.severe("Error notifying known node: " + e.getMessage());
+                } finally {
+                    group.shutdownGracefully();
+                }
             }
         }
 
