@@ -7,6 +7,7 @@ import main.java.BlockChain.Block;
 import main.java.BlockChain.Blockchain;
 import main.java.BlockChain.Miner;
 import main.java.BlockChain.Transaction;
+import main.java.BlockChain.Constants;
 import main.java.KademliaDHT.*;
 
 import java.security.*;
