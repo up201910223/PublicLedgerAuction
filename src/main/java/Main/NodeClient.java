@@ -38,15 +38,6 @@ public class NodeClient {
             Node kademliaNode = new Node(new NodeInfo(currentNode.hostAddress, currentNode.networkPort));
             Kademlia dhtInstance = Kademlia.getInstance();
 
-            if (args.length == 2) {
-                String[] bootstrapParts = args[1].split(":");
-                String bootstrapIp = bootstrapParts[0];
-                int bootstrapPort = Integer.parseInt(bootstrapParts[1]);
-
-                NodeInfo bootstrapInfo = new NodeInfo(bootstrapIp, bootstrapPort);
-                kademliaNode.updateRoutingTable(bootstrapInfo);
-                dhtInstance.joinNetwork(kademliaNode, bootstrapInfo.getNodeId());
-            }
 
             try {
                 NetworkServer server = new NetworkServer(currentNode.networkPort, kademliaNode);
@@ -64,14 +55,6 @@ public class NodeClient {
             }
 
                 // Join bootstrap network after server and channel ready
-                if (args.length == 2) {
-                    String[] bootstrapParts = args[1].split(":");
-                    String bootstrapIp = bootstrapParts[0];
-                    int bootstrapPort = Integer.parseInt(bootstrapParts[1]);
-                    NodeInfo bootstrapInfo = new NodeInfo(bootstrapIp, bootstrapPort);
-                    kademliaNode.updateRoutingTable(bootstrapInfo);
-                    dhtInstance.joinNetwork(kademliaNode, bootstrapInfo.getNodeId());
-                }
 
             try {
                 new Thread(new NodeMainMenu(kademliaNode)).start();
