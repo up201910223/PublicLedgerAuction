@@ -70,7 +70,7 @@ public class Node {
      * @return this node's information
      */
     public NodeInfo getNodeInfo() {
-        LOGGER.log('Node Info retrieved!')
+        LOGGER.log('Node Info retrieved!');
         return selfInfo;
     }
 
