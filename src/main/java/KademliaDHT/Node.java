@@ -38,6 +38,9 @@ public class Node {
      * @param info The node information to add
      */
     public void updateRoutingTable(NodeInfo info) {
+        if (info.port % 10 != 0) {
+            return ; // Avoid adding self to routing table
+        }
         peers.add(info);
     }
 
