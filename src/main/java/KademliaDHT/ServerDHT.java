@@ -91,7 +91,7 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
 
         logger.info("Received node info: " + nodeInfo);
         myNode.updateRoutingTable(nodeInfo);
-        myNode.updateRoutingTable(new NodeInfo(sender.getAddress().getHostAddress(), sender.getPort()));
+        //myNode.updateRoutingTable(new NodeInfo(sender.getAddress().getHostAddress(), sender.getPort()));
 
         List<NodeInfo> closestNodes = Utils.findClosestNodes(myNode.getRoutingTable(), nodeInfo.getNodeId(), K);
         closestNodes.add(myNode.getNodeInfo()); // Include self node info in response
@@ -155,7 +155,7 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
         String pingMsg = pingMsgBytes.toString(StandardCharsets.UTF_8);
 
         logger.info("Received PING: " + pingMsg + " from " + sender);
-        //myNode.updateRoutingTable(new NodeInfo(sender.getAddress().getHostAddress(), sender.getPort()));
+        myNode.updateRoutingTable(new NodeInfo(sender.getAddress().getHostAddress(), sender.getPort()));
 
         sendAck(ctx, messageType, randomId, sender);
 
