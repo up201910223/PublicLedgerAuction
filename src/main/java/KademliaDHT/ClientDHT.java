@@ -30,8 +30,13 @@ public class ClientDHT extends ChannelInboundHandlerAdapter {
     private Timer timeoutTimer;                  // Timer to handle response timeouts
     private byte[] identifier;                   // Unique identifier for this message
 
-    public ClientDHT(Channel sharedChannel, NodeInfo localNode, NodeInfo remoteNode, String key, ValueWrapper value, MsgType type, List<NodeInfo> nearNodes) {
-                     ValueWrapper messageValue, Kademlia.MsgType type, List<NodeInfo> neighbors) {
+    public ClientDHT(Channel sharedChannel,
+                     NodeInfo localNode,
+                     NodeInfo remoteNode,
+                     String messageKey,
+                     ValueWrapper messageValue,
+                     Kademlia.MsgType type,
+                     List<NodeInfo> neighbors) {
         this.sharedChannel = sharedChannel;
         this.localNode = localNode;
         this.remoteNode = remoteNode;
