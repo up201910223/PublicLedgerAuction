@@ -73,6 +73,7 @@ public class NetworkServer implements Runnable {
         while (attempts < retries) {
             try {
                 ChannelFuture future = boot.bind(listenPort).sync();
+        this.channel = future.channel();
                 LOGGER.info("Server active on port " + listenPort);
                 future.channel().closeFuture().sync();
                 break;
@@ -86,5 +87,9 @@ public class NetworkServer implements Runnable {
         if (attempts >= retries) {
             LOGGER.severe("Server failed to start after " + retries + " attempts.");
         }
+    }
+    /** Expose the bound channel for outbound sends */
+    public io.netty.channel.Channel getChannel() {
+        return channel;
     }
 }

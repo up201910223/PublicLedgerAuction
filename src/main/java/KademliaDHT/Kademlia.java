@@ -20,6 +20,7 @@ public class Kademlia {
 
     private static final int BUCKET_SIZE = 2; // Max number of nodes in a k-bucket
     private static Kademlia singletonInstance; // Singleton instance of this class
+    private io.netty.channel.Channel sharedChannel;
 
     private StringBuilder currentBlockHash; // Latest known block hash
     private StringBuilder currentAuctionId; // ID of the currently broadcasted auction
@@ -32,6 +33,11 @@ public class Kademlia {
     private Kademlia() {
         this.currentBlockHash = new StringBuilder(GENESIS_PREV_HASH);
         this.currentAuctionId = null;
+    }
+
+    /** Injected shared channel for both inbound and outbound UDP traffic */
+    public void setSharedChannel(io.netty.channel.Channel ch) {
+        this.sharedChannel = ch;
     }
 
     // Returns the singleton instance of Kademlia
@@ -325,22 +331,9 @@ public class Kademlia {
     /**
      * Establishes a Netty connection and sets up channel pipeline with custom handler.
      */
-    private void connectToNode(NodeInfo selfInfo, NodeInfo targetInfo, EventLoopGroup group, MessagePassingQueue.Consumer<Channel> channelSetup) throws InterruptedException {
-        Bootstrap bootstrap = new Bootstrap();
-        bootstrap.group(group)
-                .channel(NioDatagramChannel.class)
-                .option(ChannelOption.AUTO_CLOSE, true)
-                .handler(new ChannelInitializer<NioDatagramChannel>() {
-                    @Override
-                    protected void initChannel(NioDatagramChannel ch) {
-                        channelSetup.accept(ch);
-                    }
-                });
-
-        bootstrap.localAddress(selfInfo.getPort()); //Add +1 to this if port errors show up
-        ChannelFuture future = bootstrap.connect(targetInfo.getIpAddr(), targetInfo.getPort()).sync();
-        LOGGER.info("Connected to node " + targetInfo.getIpAddr() + ":" + targetInfo.getPort());
-        future.channel().closeFuture().await(3, TimeUnit.SECONDS);
+    private void connectToNode(NodeInfo selfInfo, NodeInfo targetInfo, EventLoopGroup group, MessagePassingQueue.Consumer<Channel> channelSetup) {
+        // Reuse shared channel for outbound DHT messages
+        channelSetup.accept(sharedChannel);
     }
 
     // Getter/setter for current block hash

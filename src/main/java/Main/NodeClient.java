@@ -49,8 +49,11 @@ public class NodeClient {
             }
 
             try {
-                new Thread(new NetworkServer(currentNode.networkPort, kademliaNode)).start();
+                NetworkServer server = new NetworkServer(currentNode.networkPort, kademliaNode);
+                Thread serverThread = new Thread(server);
+                serverThread.start();
                 LOGGER.log(Level.FINE, "Kademlia server successfully launched.");
+                Kademlia.getInstance().setSharedChannel(server.getChannel());
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Failed to start Kademlia server.", e);
             }
