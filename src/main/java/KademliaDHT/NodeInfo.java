@@ -12,7 +12,7 @@ public class NodeInfo implements Serializable, Comparable<NodeInfo> {
 
     private String nodeId;
     private String ipAddr;
-    private int port;
+    public int port;
 
     /**
      * Constructs a NodeInfo object with the specified IP address and port
