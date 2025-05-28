@@ -1,17 +1,36 @@
 # PublicLedgerAuction
 
-@Rogério 
-## Basic Behaviour
-- Nodes are created
-- All of them will act as server/client, meaning they will handle the DHT tasks and the auction related tasks
-- Initial transaction needs to exist so we can create the genesis block, this genesis block can have whatever information, doesnt matter if it's an actual transaction or just random text
-- From now on the following behaviour should repeat
-- - When an auction finishes, the transaction is added to a "queue" of the respective Node (Miner part will handle it)
-- - When this "queue" of transactions finishes, a new block is generated
-- - This new block will then need to be disseminated for all other nodes of the network
+## How to run
 
-- There are probably steps missing or slight errors on this but at least we have a general idea that we can polish. 
+### We will be including the already built '.jar' file, you can find this one in the folder 'build/libs'. However if you still need to build the project yourself you can use the following command:
 
-@Rogério
-### IMPORTANT
-- Discuss between us what type of data structure we want to use and figure out how our parts of the work will fit together.
+`./gradlew clean shadowJar`
+
+### ===================================
+
+### Next you must initialize the bootstrap node using:
+
+
+`java -jar PublicLedgerAuction-1.0-all.jar 5000`
+
+or
+
+`java -cp PublicLedgerAuction-1.0-all.jar main.java.Main.NodeClient 5000`
+
+In this example we use port '5000', however you can use whichever port is available in your computer.
+
+### ===================================
+
+### After the boostrap node, all subsequent nodes need to be created as such:
+
+`java -jar PublicLedgerAuction-1.0-all.jar 5X00 127.0.0.1:5000`
+
+or
+
+`java -cp PublicLedgerAuction-1.0-all.jar main.java.Main.NodeClient 5X00 127.0.0.1:5000`
+
+Where 'X' is the number of the node (1,2,3,4,...)
+
+### ===================================
+
+### Once all nodes are created you can interact with the program using the options you see on the main menu.
