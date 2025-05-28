@@ -6,6 +6,7 @@ import main.java.KademliaDHT.ServerDHT;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.Channel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 
 import java.util.concurrent.TimeUnit;
@@ -15,6 +16,7 @@ import java.util.logging.Logger;
  * Class NetworkServer: Represents a Netty-based UDP server node handler.
  */
 public class NetworkServer implements Runnable {
+    private Channel channel;
 
     private static final Logger LOGGER = Logger.getLogger(NetworkServer.class.getName());
     private final int listenPort;
