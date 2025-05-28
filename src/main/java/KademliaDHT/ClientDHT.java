@@ -1,4 +1,5 @@
 package main.java.KademliaDHT;
+import io.netty.channel.Channel;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -17,6 +18,7 @@ import java.util.logging.Logger;
  * Handles outbound DHT messages and incoming responses within a Kademlia-like distributed system.
  */
 public class ClientDHT extends ChannelInboundHandlerAdapter {
+    private final Channel sharedChannel;
     private static final Logger LOG = Logger.getLogger(ClientDHT.class.getName());
 
     private NodeInfo localNode;                  // Node sending the message
@@ -28,8 +30,9 @@ public class ClientDHT extends ChannelInboundHandlerAdapter {
     private Timer timeoutTimer;                  // Timer to handle response timeouts
     private byte[] identifier;                   // Unique identifier for this message
 
-    public ClientDHT(NodeInfo localNode, NodeInfo remoteNode, String messageKey,
+    public ClientDHT(Channel sharedChannel, NodeInfo localNode, NodeInfo remoteNode, String key, ValueWrapper value, MsgType type, List<NodeInfo> nearNodes) {
                      ValueWrapper messageValue, Kademlia.MsgType type, List<NodeInfo> neighbors) {
+        this.sharedChannel = sharedChannel;
         this.localNode = localNode;
         this.remoteNode = remoteNode;
         this.messageKey = messageKey;
