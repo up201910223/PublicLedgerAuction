@@ -310,9 +310,6 @@ public class Kademlia {
                 ClientDHT handler = new ClientDHT(selfInfo, targetInfo, key, value, type, nearNodes);
                 channel.pipeline().addLast(handler);
             });
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            LOGGER.severe("Connection interrupted: " + e.getMessage());
         } catch (Exception e) {
             LOGGER.severe("Connection error: " + e.getMessage());
         } finally {
