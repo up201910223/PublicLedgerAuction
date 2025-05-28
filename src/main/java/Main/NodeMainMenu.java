@@ -82,8 +82,8 @@ public class NodeMainMenu implements Runnable {
                     //Block newBlock = new Block(getLastBlock().index+1, getPreviousHash(), getTransactions());
                     //newBlock.mineBlock(Constants.DIFFICULTY);
                     //newBlock.toString();
-                    chain.addBlock(newBlock);
-                    dht.store(thisNode, key, new ValueWrapper(newBlock));
+                    //chain.addBlock(newBlock);
+                    //dht.store(thisNode, key, new ValueWrapper(newBlock));
                 }
 
                 case "3" -> {
@@ -103,8 +103,8 @@ public class NodeMainMenu implements Runnable {
                     //Block minedBlock = new Block(getLastBlock().index+1,getPreviousHash(),getTransactions());
                     //minedBlock.mineBlock(Constants.DIFFICULTY);
                    // minedBlock.toString();
-                    dht.store(thisNode, minedBlock.getHash(), new ValueWrapper(minedBlock));
-                    dht.notifyNewBlockHash(thisNode.getNodeInfo(), thisNode.getRoutingTable(), minedBlock.getHash());
+                    //dht.store(thisNode, minedBlock.getHash(), new ValueWrapper(minedBlock));
+                    //dht.notifyNewBlockHash(thisNode.getNodeInfo(), thisNode.getRoutingTable(), minedBlock.getHash());
                 }
 
                 case "6" -> {
