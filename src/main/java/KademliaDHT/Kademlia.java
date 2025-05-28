@@ -59,6 +59,18 @@ public class Kademlia {
         // Remove bootstrap node from table temporarily to avoid duplication
         selfNode.getRoutingTable().remove(selfNode.findNodeInfoById(bootstrapNodeId));
 
+        NodeInfo bootstrapNode = selfNode.findNodeInfoById(bootstrapNodeId);
+        if (bootstrapNode != null) {
+            connectToNode(bootstrapNode, selfNode.getNodeInfo());
+        }
+
+        // Notify other known nodes about this node
+        for (NodeInfo knownNode : selfNode.getRoutingTable()) {
+            if (!knownNode.getNodeId().equals(selfNode.getNodeInfo().getNodeId())) {
+                connectToNode(knownNode, selfNode.getNodeInfo());
+            }
+        }
+
         // Expand knowledge by querying nodes found
         for (NodeInfo nearNode : initialNearNodes) {
             selfNode.updateRoutingTable(nearNode);

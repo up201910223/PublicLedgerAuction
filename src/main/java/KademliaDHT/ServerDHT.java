@@ -56,6 +56,11 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
 
         InetSocketAddress sender = packet.sender();
 
+        NodeInfo incomingNode = new NodeInfo(sender.getAddress().getHostAddress(), sender.getPort());
+        if (!myNode.getRoutingTable().contains(incomingNode) && !incomingNode.equals(myNode.getNodeInfo())) {
+            myNode.updateRoutingTable(incomingNode);
+        }
+
         // Dispatch by message type
         switch (messageType) {
             case FIND_NODE, FIND_VALUE -> handleFindNodeOrValue(ctx, buffer, messageType, randomId, sender);
