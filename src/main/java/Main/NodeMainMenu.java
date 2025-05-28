@@ -79,7 +79,7 @@ public class NodeMainMenu implements Runnable {
                 case "2" -> {
                     System.out.println("Enter Key:");
                     String key = inputScanner.nextLine();
-                    Block newBlock = new Block(chain.getLastBlock.index+1, chain.getPreviousHash(), chain.getTransactions());
+                    Block newBlock = new Block(chain.getLastBlock().index+1, chain.getPreviousHash(), chain.getTransactions());
                     newBlock.mineBlock(Constants.DIFFICULTY);
                     newBlock.toString();
                     chain.addBlock(newBlock);
@@ -100,7 +100,7 @@ public class NodeMainMenu implements Runnable {
 
                 case "5" -> {
                     System.out.println("Mining block...");
-                    Block minedBlock = new Block(chain.getLastBlock.index+1,chain.getPreviousHash(),chain.getTransactions());
+                    Block minedBlock = new Block(chain.getLastBlock().index+1,chain.getPreviousHash(),chain.getTransactions());
                     minedBlock.mineBlock(Constants.DIFFICULTY);
                     minedBlock.toString();
                     dht.store(thisNode, minedBlock.getHash(), new ValueWrapper(minedBlock));
