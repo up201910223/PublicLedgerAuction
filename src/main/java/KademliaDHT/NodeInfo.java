@@ -11,7 +11,7 @@ public class NodeInfo implements Serializable, Comparable<NodeInfo> {
     private static final Logger logger = Logger.getLogger(NodeInfo.class.getName());
 
     private String nodeId;
-    private String ipAddr;
+    private final String ipAddr = '127.0.0.1';
     public int port;
 
     /**
@@ -22,7 +22,7 @@ public class NodeInfo implements Serializable, Comparable<NodeInfo> {
      * @param port   The port number on which the node listens
      */
     public NodeInfo(String ipAddr, int port) {
-        this.ipAddr = ipAddr;
+        //this.ipAddr = ipAddr;
         this.port = port;
         this.nodeId = generateNodeId(ipAddr, port);
     }

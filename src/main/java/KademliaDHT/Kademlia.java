@@ -65,6 +65,7 @@ public class Kademlia {
         if (bootstrapNode != null) {
             EventLoopGroup group = new NioEventLoopGroup();
             try {
+                LOGGER.info("Connecting to bootstrap node: " + bootstrapNode);
                 connectToNode(selfNode.getNodeInfo(), bootstrapNode, group, channel -> {
                     ClientDHT handler = new ClientDHT(
                         selfNode.getNodeInfo(),
@@ -111,6 +112,7 @@ public class Kademlia {
         }
 
         // Expand knowledge by querying nodes found
+        LOGGER.info("Expanding routing table with initial near nodes...");
         for (NodeInfo nearNode : initialNearNodes) {
             selfNode.updateRoutingTable(nearNode);
             List<NodeInfo> extendedNearNodes = findNode(selfNode.getNodeInfo(), nearNode.getNodeId(), selfNode.getRoutingTable());
