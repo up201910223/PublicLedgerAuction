@@ -79,9 +79,9 @@ public class NodeMainMenu implements Runnable {
                 case "2" -> {
                     System.out.println("Enter Key:");
                     String key = inputScanner.nextLine();
-                    Block newBlock = new Block(Blockchain.getLastBlock().index+1, Blockchain.getPreviousHash(), Blockchain.getTransactions());
-                    newBlock.mineBlock(Constants.DIFFICULTY);
-                    newBlock.toString();
+                    //Block newBlock = new Block(getLastBlock().index+1, getPreviousHash(), getTransactions());
+                    //newBlock.mineBlock(Constants.DIFFICULTY);
+                    //newBlock.toString();
                     chain.addBlock(newBlock);
                     dht.store(thisNode, key, new ValueWrapper(newBlock));
                 }
@@ -100,9 +100,9 @@ public class NodeMainMenu implements Runnable {
 
                 case "5" -> {
                     System.out.println("Mining block...");
-                    Block minedBlock = new Block(Blockchain.getLastBlock().index+1,Blockchain.getPreviousHash(),Blockchain.getTransactions());
-                    minedBlock.mineBlock(Constants.DIFFICULTY);
-                    minedBlock.toString();
+                    //Block minedBlock = new Block(getLastBlock().index+1,getPreviousHash(),getTransactions());
+                    //minedBlock.mineBlock(Constants.DIFFICULTY);
+                   // minedBlock.toString();
                     dht.store(thisNode, minedBlock.getHash(), new ValueWrapper(minedBlock));
                     dht.notifyNewBlockHash(thisNode.getNodeInfo(), thisNode.getRoutingTable(), minedBlock.getHash());
                 }

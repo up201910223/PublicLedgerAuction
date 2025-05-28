@@ -31,7 +31,7 @@ public class Blockchain {
         this.pendingTransactions = new ArrayList<>();
         this.difficulty = Constants.DIFFICULTY; // Importa o nível de dificuldade da classe Constants
         Block genesisBlock = createGenesisBlock();
-        chain.add(createGenesisBlock());
+        chain.add(genesisBlock);
     }
     /**
      * Obtém singleton ds instãnica da classe Blockchain.
