@@ -109,6 +109,7 @@ public class ClientDHT extends ChannelInboundHandlerAdapter {
      */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object received) throws IOException, ClassNotFoundException {
+        System.out.println("Received message of type: " + type);
         if (type != Kademlia.MsgType.NEW_AUCTION) {
             cancelTimeout();  // Cancel timeout on valid response
         }
