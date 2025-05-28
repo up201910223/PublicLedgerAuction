@@ -22,7 +22,7 @@ public class NodeMainMenu implements Runnable {
 
     private final Scanner inputScanner;
     private final Kademlia dht;
-    private final Blockchain chain;
+    public final Blockchain chain;
     private final Wallet wallet;
     private final Node thisNode;
 
