@@ -304,22 +304,15 @@ public class Kademlia {
      */
     private Object connectAndHandle(NodeInfo selfInfo, NodeInfo targetInfo, String key, ValueWrapper value, MsgType type) {
         List<NodeInfo> nearNodes = new ArrayList<>();
-        EventLoopGroup eventGroup = new NioEventLoopGroup();
+        // Reuse shared channel for outbound DHT messages without creating new event loops
         try {
-            connectToNode(selfInfo, targetInfo, eventGroup, channel -> {
-                ClientDHT handler = new ClientDHT(selfInfo, targetInfo, key, value, type, nearNodes);
+            connectToNode(thisNode.getNodeInfo(), targetInfo, channel -> {
+                ClientDHT handler = new ClientDHT(sharedChannel, thisNode.getNodeInfo(), targetInfo, key, value, type, nearNodes);
                 channel.pipeline().addLast(handler);
             });
         } catch (Exception e) {
             LOGGER.severe("Connection error: " + e.getMessage());
-        } finally {
-            eventGroup.shutdownGracefully().addListener(future -> {
-                if (!future.isSuccess()) {
-                    LOGGER.severe("Event loop shutdown error: " + future.cause().getMessage());
-                }
-            });
         }
-
         if (type == MsgType.FIND_NODE) return nearNodes;
         else if (type == MsgType.FIND_VALUE) return value.getValue();
         return null;
@@ -328,7 +321,7 @@ public class Kademlia {
     /**
      * Establishes a Netty connection and sets up channel pipeline with custom handler.
      */
-    private void connectToNode(NodeInfo selfInfo, NodeInfo targetInfo, EventLoopGroup group, MessagePassingQueue.Consumer<Channel> channelSetup) {
+    private void connectToNode(NodeInfo selfInfo, NodeInfo targetInfo, java.util.function.Consumer<io.netty.channel.Channel> channelSetup) {
         // Reuse shared channel for outbound DHT messages
         channelSetup.accept(sharedChannel);
     }

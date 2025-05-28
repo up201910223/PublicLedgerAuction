@@ -72,7 +72,10 @@ public class NodeMainMenu implements Runnable {
                 case "1" -> {
                     System.out.println("Enter Node ID:");
                     String nodeId = inputScanner.nextLine();
-                    dht.findNode(thisNode.getNodeInfo(), nodeId, thisNode.getRoutingTable());
+                    // Perform FIND_NODE and display results
+                    java.util.List<NodeInfo> foundNodes = dht.findNode(thisNode.getNodeInfo(), nodeId, thisNode.getRoutingTable());
+                    System.out.println("Found nodes:");
+                    for (NodeInfo ni : foundNodes) System.out.println(ni);
                 }
 
                 case "2" -> {
@@ -86,13 +89,17 @@ public class NodeMainMenu implements Runnable {
                 case "3" -> {
                     System.out.println("Enter Key:");
                     String findKey = inputScanner.nextLine();
-                    dht.findValue(thisNode, findKey);
+                    // Perform FIND_VALUE and display result
+                    Object value = dht.findValue(thisNode, findKey);
+                    System.out.println("Value found: " + value);
                 }
 
                 case "4" -> {
                     System.out.println("Enter Node ID:");
                     String pingId = inputScanner.nextLine();
-                    dht.ping(thisNode.getNodeInfo(), pingId, thisNode.getRoutingTable());
+                    // Perform PING and show result
+                    boolean pingResult = dht.ping(thisNode.getNodeInfo(), pingId, thisNode.getRoutingTable());
+                    System.out.println(pingResult ? "Ping successful" : "Ping failed");
                 }
 
                 case "5" -> {
