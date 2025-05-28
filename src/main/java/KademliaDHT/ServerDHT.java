@@ -91,6 +91,7 @@ public class ServerDHT extends ChannelInboundHandlerAdapter {
 
         logger.info("Received node info: " + nodeInfo);
         myNode.updateRoutingTable(nodeInfo);
+        myNode.updateRoutingTable(new NodeInfo(sender.getAddress().getHostAddress(), sender.getPort()));
 
         List<NodeInfo> closestNodes = Utils.findClosestNodes(myNode.getRoutingTable(), nodeInfo.getNodeId(), K);
         closestNodes.add(myNode.getNodeInfo()); // Include self node info in response
