@@ -102,9 +102,10 @@ public class NodeMainMenu implements Runnable {
                     System.out.println("Mining block...");
                     //Block minedBlock = new Block(getLastBlock().index+1,getPreviousHash(),getTransactions());
                     //minedBlock.mineBlock(Constants.DIFFICULTY);
-                   // minedBlock.toString();
-                    //dht.store(thisNode, minedBlock.getHash(), new ValueWrapper(minedBlock));
-                    //dht.notifyNewBlockHash(thisNode.getNodeInfo(), thisNode.getRoutingTable(), minedBlock.getHash());
+                    Block block2 = this.generateBlock();
+                    block2.toString();
+                    dht.store(thisNode, block2.getHash(), new ValueWrapper(block2));
+                    dht.notifyNewBlockHash(thisNode.getNodeInfo(), thisNode.getRoutingTable(), block2.getHash());
                 }
 
                 case "6" -> {
@@ -144,6 +145,8 @@ public class NodeMainMenu implements Runnable {
 
                             if (chain.addTransaction(tx)) {
                                 dht.notifyAuctionUpdate(thisNode.getNodeInfo(), thisNode.getRoutingTable(), existingAuction);
+                                System.out.println("Transaction added To chain.");
+                                System.out.println(chain.getInstance());
                             }
                         }
                     } else {
@@ -183,16 +186,22 @@ public class NodeMainMenu implements Runnable {
 
     public Block generateBlock() {
         Miner miner = new Miner();
+        System.out.println("mined?");
         List<Transaction> txList = new ArrayList<>();
+        System.out.println("Trasaction part");
 
         KeyPair keyPair = Wallet.generateKeyPair();
-        Transaction genesisTx = new Transaction(keyPair.getPublic(), 0);
+        System.out.println("Generated Key pair");
+        Transaction genesisTx = new Transaction(keyPair.getSenderPublicKey(), 0);
+        System.out.println("Transaction added");
         genesisTx.signTransaction(wallet.getPrivateKey());
-
+        System.out.println("Signed transaction");
         txList.add(genesisTx);
+        System.out.println("oi");
         Block block = new Block(1, chain.getLastBlock().getHash(), txList);
-
+        System.out.println("created block");
         miner.mine(block);
+        System.out.println("mined!");
         return block;
     }
 }

@@ -10,19 +10,27 @@ public class Miner {
     private double reward;
 
     /**
-     * Realiza a mineração de um bloco através do algoritmo de prova de trabalho (PoW).
-     * Incrementa o nonce até que o hash do bloco satisfaça a dificuldade alvo.
+     * Mines the block with the given difficulty.
      *
-     * @param block Bloco a ser minerado.
+     * @param b The most recent block in the chain.
      */
-    public void mine(Block block) {
-        // Loop até que o hash do bloco atinja o alvo de dificuldade.
-        while (!isValidProof(block)) {
-            block.incrementNonce();
-            block.calculateHash();
-        }
+    private boolean PoW(Block b) {
+        String target = new String(new char[Constants.DIFFICULTY]).replace('\0', '0');
+        String hash = b.getHash();
 
-        // Quando encontra o hash válido, recompensa o minerador.
+        return !hash.substring(0, Constants.DIFFICULTY).equals(target);
+    }
+
+    /**
+     * Mines a block until the proof of work (PoW) meets the target difficulty.
+     *
+     * @param b The block to be mined.
+     */
+    public void mine(Block b) {
+        while (PoW(b)){
+            b.incrementNonce();
+            b.calculateHash();
+        }
         reward += Constants.MINER_REWARD;
     }
 
